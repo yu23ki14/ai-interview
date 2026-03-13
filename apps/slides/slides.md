@@ -101,9 +101,9 @@ PII自動検出・リダクション、禁止データは保存しない
 </div>
 <div class="p-4 bg-gray-50 rounded-lg">
 
-### 📈 品質スコア
+### 📈 詳細度スコアリング
 
-重み付きスコアでデータ品質を客観的に評価
+動的ルーブリックで回答品質を0.0〜1.0で評価、自動深掘り
 
 </div>
 </div>
@@ -187,33 +187,37 @@ layout: section
 <div class="grid grid-cols-2 gap-8 mt-8">
 <div>
 
-### セッション一覧
+### セッション一覧・詳細
 
-- 全インタビューセッションの一覧表示
-- ステータス（進行中 / 完了 / 停止）
-- 完了率（completionScore）でフィルタ可能
+- 全セッションの一覧表示（ステータス・完了率）
+- **スロット別カードUI** — 各スロットの抽出値・詳細度スコア・ピックアップ状態を表示
+- 良い回答の「ピックアップ」ボタンでルーブリック生成の素材を収集
 
 </div>
 <div>
 
-### セッション詳細
+### ルーブリック管理（`/admin/rubrics`）
 
-- **メタデータ**: セッションID、ステージ、完了率、開始・終了時刻
-- **抽出済みケースデータ**: 構造化JSONの全内容
-- **トランスクリプト**: AI・参加者の全発言ログ
+- スロット別にピックアップ済みの良い回答を一覧管理
+- **ルーブリック生成** — Claude Sonnetが良い回答群から評価基準を自動生成
+- リサーチャーが確認・**承認**して運用開始
+- 詳細度閾値（深掘り基準）の設定
 
 </div>
 </div>
 
 <div class="mt-8">
 
-### API エンドポイント
+### 管理 API エンドポイント
 
 | エンドポイント | 用途 |
 |-------------|------|
 | `GET /api/admin/sessions` | セッション一覧取得 |
-| `GET /api/admin/sessions/{id}` | セッション詳細 + 抽出データ |
-| `GET /api/sessions/{id}/messages` | トランスクリプト取得 |
+| `GET /api/admin/sessions/{id}` | セッション詳細 + スロットカード |
+| `POST /api/admin/exemplars` | 良い回答をピックアップ |
+| `POST /api/admin/rubrics/generate` | ルーブリック生成 |
+| `POST /api/admin/rubrics/{id}/activate` | ルーブリック承認 |
+| `PATCH /api/surveys/{id}/detail-threshold` | 詳細度閾値変更 |
 
 </div>
 
@@ -264,6 +268,7 @@ layout: section
 - 全18スロットに優先順位あり
 - 「覚えていない」「答えたくない」→ 自動スキップ
 - 深掘りフェーズ前に**確認ゲート**
+- **2パス方式**: 未充填スロット → 詳細度が閾値未満のスロットを深掘り
 
 </div>
 <div>
@@ -370,7 +375,7 @@ layout: section
 - `first_touch_channel`
 - `was_ad`
 - `money_sent`
-- `why_it_felt_believable`
+- `why_it_felt_believable` *
 
 </div>
 <div class="p-4 border-2 border-amber-400 rounded-lg">
@@ -381,9 +386,9 @@ layout: section
 - `ad_platform`
 - `claimed_role`
 - `moved_to_external_channel`
-- `warning_signs_noticed`
-- `emotions_during`
-- `emotions_after`
+- `warning_signs_noticed` *
+- `emotions_during` *
+- `emotions_after` *
 
 </div>
 <div class="p-4 border-2 border-blue-400 rounded-lg">
@@ -392,16 +397,22 @@ layout: section
 各 ~2.5%
 
 - `estimated_amount_jpy`
-- `non_monetary_harm`
-- `platform_design_help`
-- `public_warning_help`
-- `info_support_help`
+- `non_monetary_harm` *
+- `platform_design_help` *
+- `public_warning_help` *
+- `info_support_help` *
 - `should_be_improved_first`
 
 </div>
 </div>
 
-<div class="mt-6">
+<div class="mt-4 p-3 bg-purple-50 rounded-lg text-sm">
+
+**\* 詳細度スコアリング対象**: バイナリ（有無）ではなく `weight × detail_score(0.0〜1.0)` で算出。例: weight=0.1, detail_score=0.4 → 0.04（従来は0.1）
+
+</div>
+
+<div class="mt-4">
 
 | スコア帯 | 判定 | 意味 |
 |---------|------|------|
@@ -464,7 +475,212 @@ DB保存前に自動置換:
 layout: section
 ---
 
-# 6. 分析対象データ
+# 6. 回答詳細度スコアリング
+
+---
+
+## 課題と解決アプローチ
+
+<div class="grid grid-cols-2 gap-8 mt-6">
+<div>
+
+### 課題
+
+従来の完了スコアは各スロットの**有無（バイナリ）**で算出
+
+- 「Instagram」と一言だけの回答も、具体的な経緯を3文で説明した回答も同じ「完了」扱い
+- 回答者間で情報の詳細度にばらつき
+- リサーチャーが求める深さに達していなくても深掘りが終了
+
+</div>
+<div>
+
+### 解決
+
+**動的ルーブリック生成**による回答品質の均一化
+
+- 各スロットの回答に**詳細度（0.0〜1.0）**を判定
+- リサーチャーが「良い回答」をピックアップ → **評価基準を自動生成**
+- 閾値未満のスロットは**自動で深掘り質問**を追加
+
+</div>
+</div>
+
+---
+
+## 全体フロー
+
+<div class="mt-4">
+
+```
+Phase 1: 初期運用（ルーブリックなし）
+  → バイナリ判定にフォールバック（detail_score = 1.0）
+
+Phase 2: 回答蓄積期
+  リサーチャーが実際の回答から「良い回答」をピックアップ
+  → ピックアップが3件以上溜まる
+
+Phase 3: ルーブリック生成
+  「ルーブリックを生成」→ Claude Sonnet がピックアップの共通点を抽出
+  → リサーチャーが確認・承認
+
+Phase 4: ルーブリック運用
+  承認されたルーブリックで Claude Haiku がリアルタイム詳細度判定
+  → 閾値未満のスロットは自動深掘り
+```
+
+</div>
+
+---
+
+## 詳細度判定の対象（8スロット）
+
+<div class="grid grid-cols-2 gap-8 mt-6">
+<div>
+
+### 詳細度判定対象
+
+自由記述的な回答を持つスロット
+
+| スロット | 判定理由 |
+|---------|---------|
+| `why_it_felt_believable` | 信じた理由の具体性 |
+| `warning_signs_noticed` | 違和感の具体性 |
+| `emotions_during` | 体験中の感情の深さ |
+| `emotions_after` | 事後の感情の深さ |
+| `non_monetary_harm` | 非金銭的被害の具体性 |
+| `what_platform_design_...` | 予防策提案の具体性 |
+| `what_public_warning_...` | 注意喚起提案の具体性 |
+| `what_information_...` | 情報支援提案の具体性 |
+
+</div>
+<div>
+
+### バイナリ判定のまま（9スロット）
+
+boolean / enum / number のスロット
+
+- `case_type` — enum
+- `first_touch_channel` — 単一事実
+- `was_ad` — Yes/No
+- `ad_platform` — 単一事実
+- `claimed_role` — enum的
+- `moved_to_external_channel` — Yes/No
+- `money_sent` — Yes/No
+- `attempt_stopped_before_payment` — Yes/No
+- `estimated_amount_jpy` — 数値
+
+</div>
+</div>
+
+---
+
+## ルーブリックの構造
+
+<div class="grid grid-cols-2 gap-8 mt-4">
+<div>
+
+### 構造（JSON）
+
+```json
+{
+  "slot_key": "why_it_felt_believable",
+  "version": 1,
+  "dimensions": [
+    {
+      "name": "具体性",
+      "weight": 0.3,
+      "levels": {
+        "0.0": "言及なし",
+        "0.3": "抽象的な言及のみ",
+        "0.6": "一定の具体性あり",
+        "1.0": "高い具体性"
+      }
+    },
+    { "name": "多面性", "weight": 0.3, ... },
+    { "name": "心理過程", "weight": 0.2, ... },
+    { "name": "時間軸", "weight": 0.2, ... }
+  ]
+}
+```
+
+</div>
+<div>
+
+### スコア算出
+
+```
+detail_score = Σ (dim.weight × dim.level_score)
+```
+
+**例**: 具体性=0.6, 多面性=0.3, 心理過程=0.5, 時間軸=0.0
+
+```
+= 0.3×0.6 + 0.3×0.3 + 0.2×0.5 + 0.2×0.0
+= 0.37
+```
+
+### 深掘り判定
+
+```
+detail_score >= threshold → 次のスロットへ
+detail_score <  threshold → 深掘り質問を追加
+```
+
+閾値はリサーチャーが管理画面で調整可能（デフォルト: 0.6）
+
+### スコア安定化
+
+ターン間のブレ防止: **monotonic increase**（直近の最大値を採用）
+
+</div>
+</div>
+
+---
+
+## LLMモデルの使い分け
+
+<div class="grid grid-cols-2 gap-8 mt-8">
+<div class="p-4 bg-blue-50 rounded-lg">
+
+### Claude Sonnet — ルーブリック生成
+
+- 非リアルタイム処理
+- ピックアップされた良い回答群の**共通点を分析**
+- 3〜5つの評価観点＋重み＋レベル定義を生成
+- リサーチャー承認後に運用開始
+
+</div>
+<div class="p-4 bg-green-50 rounded-lg">
+
+### Claude Haiku — リアルタイム詳細度判定
+
+- インタビュー中の**各ターンで並列実行**
+- 低レイテンシ・コスト効率重視
+- ルーブリックの各観点に沿ってスコアリング
+- 値が変化したスロットのみ再判定
+
+</div>
+</div>
+
+<div class="mt-6">
+
+### 改修後のパイプライン
+
+```
+ユーザー発言 → 安全判定 → 抽出 → マージ
+  → 詳細度判定（Haiku, 並列） → 完了スコア算出（詳細度加味）
+  → ステージ判定 → スロット選択（2パス: 未充填 → 低スコア深掘り）
+  → 質問生成（深掘り時はDetailContext付与）
+```
+
+</div>
+
+---
+layout: section
+---
+
+# 7. 分析対象データ
 
 ---
 
@@ -566,7 +782,7 @@ FUTURE → prevention_signal（何があれば防げた）
 layout: section
 ---
 
-# 7. システム構成
+# 8. システム構成
 
 ---
 
@@ -603,7 +819,8 @@ layout: section
 | `/interview/{id}` | インタビュー画面 |
 | `/complete/{id}` | 完了画面 |
 | `/admin/sessions` | 管理者：一覧 |
-| `/admin/sessions/{id}` | 管理者：詳細 |
+| `/admin/sessions/{id}` | 管理者：詳細（スロットカード） |
+| `/admin/rubrics` | ルーブリック管理 |
 
 ### 開発
 
@@ -642,11 +859,11 @@ pnpm generate:api # APIクライアント再生成
 |---------|------|------|
 | POST | `/api/surveys` | アンケート作成 |
 | GET | `/api/surveys/{id}` | アンケート取得 |
+| PATCH | `/api/surveys/{id}/detail-threshold` | 閾値変更 |
 | POST | `/api/sessions` | セッション開始 |
-| GET | `/api/sessions/{id}` | セッション取得 |
 | POST | `/api/sessions/{id}/messages` | メッセージ送信 |
-| GET | `/api/sessions/{id}/messages` | ログ取得 |
-| GET | `/api/sessions/{id}/summary` | 要約取得 |
+| POST | `/api/admin/exemplars` | ピックアップ |
+| POST | `/api/admin/rubrics/generate` | ルーブリック生成 |
 
 </div>
 </div>

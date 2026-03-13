@@ -13,7 +13,7 @@ ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
 EOF
 
 echo "Running D1 migrations..."
-CI=true pnpm wrangler d1 migrations apply my-database --local
+CI=true pnpm wrangler d1 migrations apply ai-interview --local
 echo "Migrations completed!"
 
 echo "Starting Wrangler dev server..."
