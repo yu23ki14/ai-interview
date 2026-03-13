@@ -132,7 +132,7 @@ app.openapi(getSessionDetailRoute, async (c) => {
 
 	// Build slots array from SLOT_PRIORITY order
 	const { SLOT_PRIORITY } = await import("../engine/slots.js");
-	const pickedUpSlots = new Set(exemplars.map((e) => e.slotKey));
+	const exemplarBySlot = new Map(exemplars.map((e) => [e.slotKey, e.id]));
 	const scoreMap = new Map(scores.map((s) => [s.slotKey, s.score]));
 	const detailScoresData = caseRecord?.detailScoresData;
 
@@ -171,6 +171,7 @@ app.openapi(getSessionDetailRoute, async (c) => {
 
 		const detailScore = detailScoresData?.[slotKey] ?? scoreMap.get(slotKey) ?? null;
 
+		const exemplarId = exemplarBySlot.get(slotKey) ?? null;
 		return {
 			slotKey,
 			label: getSlotLabel(slotKey),
@@ -178,7 +179,8 @@ app.openapi(getSessionDetailRoute, async (c) => {
 			isFilled: isFilled(extractedValue),
 			isDetailScorable: isScorableSlot,
 			detailScore: isScorableSlot ? detailScore : null,
-			isPickedUp: pickedUpSlots.has(slotKey),
+			isPickedUp: exemplarId !== null,
+			exemplarId,
 		};
 	});
 

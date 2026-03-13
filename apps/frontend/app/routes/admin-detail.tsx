@@ -4,15 +4,7 @@ import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import {
-	Dialog,
-	DialogContent,
-	DialogDescription,
-	DialogFooter,
-	DialogHeader,
-	DialogTitle,
-} from "~/components/ui/dialog";
-import { Textarea } from "~/components/ui/textarea";
-import {
+	useDeleteApiAdminExemplarsId,
 	useGetApiAdminSessionsId,
 	usePostApiAdminExemplars,
 } from "../../src/api/gen/aIInterviewAPI";
@@ -47,117 +39,69 @@ function SlotCardItem({
 	slot,
 	surveyId,
 	sessionId,
-	onPickedUp,
+	onChanged,
 }: {
 	slot: SlotCard;
 	surveyId: string;
 	sessionId: string;
-	onPickedUp: () => void;
+	onChanged: () => void;
 }) {
-	const [dialogOpen, setDialogOpen] = useState(false);
-	const [rawText, setRawText] = useState("");
-	const [notes, setNotes] = useState("");
-
 	const createExemplar = usePostApiAdminExemplars();
+	const deleteExemplar = useDeleteApiAdminExemplarsId();
 
-	const handleSave = () => {
-		createExemplar.mutate(
-			{
-				data: {
-					surveyId,
-					sessionId,
-					slotKey: slot.slotKey,
-					rawText,
-					extractedValue: slot.extractedValue,
-					notes: notes || undefined,
+	const isPending = createExemplar.isPending || deleteExemplar.isPending;
+
+	const handleToggle = () => {
+		if (isPending) return;
+
+		if (slot.isPickedUp && slot.exemplarId) {
+			deleteExemplar.mutate({ id: slot.exemplarId }, { onSuccess: () => onChanged() });
+		} else {
+			createExemplar.mutate(
+				{
+					data: {
+						surveyId,
+						sessionId,
+						slotKey: slot.slotKey,
+						extractedValue: slot.extractedValue,
+					},
 				},
-			},
-			{
-				onSuccess: () => {
-					setDialogOpen(false);
-					setRawText("");
-					setNotes("");
-					onPickedUp();
-				},
-			},
-		);
+				{ onSuccess: () => onChanged() },
+			);
+		}
 	};
 
 	return (
-		<>
-			<Card>
-				<CardHeader className="pb-3">
-					<div className="flex items-center justify-between">
-						<CardTitle className="text-base">{slot.label}</CardTitle>
-						<div className="flex items-center gap-2">
-							{slot.isDetailScorable && <Badge variant="outline">詳細度対象</Badge>}
-							{slot.isDetailScorable && slot.detailScore !== null && (
-								<Badge variant="secondary">詳細度: {Math.round(slot.detailScore * 100)}%</Badge>
-							)}
-							{slot.isPickedUp && <Badge>ピックアップ済</Badge>}
-						</div>
-					</div>
-				</CardHeader>
-				<CardContent>
-					<div className="text-sm">{formatExtractedValue(slot.extractedValue)}</div>
-					{slot.isDetailScorable && slot.isFilled && !slot.isPickedUp && (
-						<Button
-							variant="outline"
-							size="sm"
-							className="mt-3"
-							onClick={() => setDialogOpen(true)}
-						>
-							良い回答としてピックアップ
-						</Button>
-					)}
-				</CardContent>
-			</Card>
-
-			<Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-				<DialogContent>
-					<DialogHeader>
-						<DialogTitle>この回答を良い回答として保存</DialogTitle>
-						<DialogDescription>
-							{slot.label}（{slot.slotKey}）
-						</DialogDescription>
-					</DialogHeader>
-					<div className="flex flex-col gap-4">
-						<div>
-							<label htmlFor="rawText" className="mb-1 block text-sm font-medium">
-								回答者の原文（該当箇所）
+		<Card>
+			<CardHeader className="pb-3">
+				<div className="flex items-center justify-between">
+					<CardTitle className="text-base">{slot.label}</CardTitle>
+					<div className="flex items-center gap-2">
+						{slot.isDetailScorable && <Badge variant="outline">詳細度対象</Badge>}
+						{slot.isDetailScorable && slot.detailScore !== null && (
+							<Badge variant="secondary">詳細度: {Math.round(slot.detailScore * 100)}%</Badge>
+						)}
+						{slot.isDetailScorable && slot.isFilled && (
+							<label className="flex cursor-pointer items-center gap-1.5">
+								<input
+									type="checkbox"
+									checked={slot.isPickedUp}
+									onChange={handleToggle}
+									disabled={isPending}
+									className="h-4 w-4 rounded border-gray-300"
+								/>
+								<span className="text-sm text-muted-foreground">
+									{isPending ? "処理中..." : "ピックアップ"}
+								</span>
 							</label>
-							<Textarea
-								id="rawText"
-								value={rawText}
-								onChange={(e) => setRawText(e.target.value)}
-								placeholder="該当する発言を貼り付けてください"
-								rows={4}
-							/>
-						</div>
-						<div>
-							<label htmlFor="notes" className="mb-1 block text-sm font-medium">
-								メモ（任意）
-							</label>
-							<Textarea
-								id="notes"
-								value={notes}
-								onChange={(e) => setNotes(e.target.value)}
-								placeholder="この回答が良い理由など"
-								rows={2}
-							/>
-						</div>
+						)}
 					</div>
-					<DialogFooter>
-						<Button variant="outline" onClick={() => setDialogOpen(false)}>
-							キャンセル
-						</Button>
-						<Button onClick={handleSave} disabled={!rawText.trim() || createExemplar.isPending}>
-							{createExemplar.isPending ? "保存中..." : "保存"}
-						</Button>
-					</DialogFooter>
-				</DialogContent>
-			</Dialog>
-		</>
+				</div>
+			</CardHeader>
+			<CardContent>
+				<div className="text-sm">{formatExtractedValue(slot.extractedValue)}</div>
+			</CardContent>
+		</Card>
 	);
 }
 
@@ -251,7 +195,7 @@ export default function AdminDetailPage() {
 								slot={slot}
 								surveyId={detail.session.surveyId}
 								sessionId={detail.session.id}
-								onPickedUp={() => detailQuery.refetch()}
+								onChanged={() => detailQuery.refetch()}
 							/>
 						))}
 					</div>

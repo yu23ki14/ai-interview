@@ -14,4 +14,6 @@ export interface SlotCard {
 	/** @nullable */
 	detailScore: number | null;
 	isPickedUp: boolean;
+	/** @nullable */
+	exemplarId: string | null;
 }

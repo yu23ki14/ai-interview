@@ -8,7 +8,8 @@
 export interface ExemplarAnswer {
 	id: string;
 	surveyId: string;
-	sessionId: string;
+	/** @nullable */
+	sessionId: string | null;
 	slotKey: string;
 	rawText: string;
 	extractedValue?: unknown | null;

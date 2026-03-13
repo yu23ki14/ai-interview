@@ -96,13 +96,18 @@ app.openapi(createExemplarRoute, async (c) => {
 
 	const id = crypto.randomUUID();
 	const now = new Date();
+	const rawText =
+		body.rawText ||
+		(typeof body.extractedValue === "string"
+			? body.extractedValue
+			: JSON.stringify(body.extractedValue ?? ""));
 
 	await db.insert(exemplarAnswers).values({
 		id,
 		surveyId: body.surveyId,
 		sessionId: body.sessionId ?? null,
 		slotKey: body.slotKey,
-		rawText: body.rawText,
+		rawText,
 		extractedValue: body.extractedValue,
 		notes: body.notes ?? null,
 		pickedBy: null,
@@ -115,7 +120,7 @@ app.openapi(createExemplarRoute, async (c) => {
 			surveyId: body.surveyId,
 			sessionId: body.sessionId ?? null,
 			slotKey: body.slotKey,
-			rawText: body.rawText,
+			rawText,
 			extractedValue: body.extractedValue,
 			pickedBy: null,
 			notes: body.notes ?? null,

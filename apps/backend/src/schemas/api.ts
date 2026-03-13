@@ -100,6 +100,7 @@ export const slotCardSchema = z
 		isDetailScorable: z.boolean(),
 		detailScore: z.number().nullable(),
 		isPickedUp: z.boolean(),
+		exemplarId: z.string().nullable(),
 	})
 	.openapi("SlotCard");
 
@@ -131,7 +132,7 @@ export const createExemplarBodySchema = z
 		surveyId: z.string(),
 		sessionId: z.string().optional(),
 		slotKey: z.string(),
-		rawText: z.string(),
+		rawText: z.string().optional(),
 		extractedValue: z.unknown(),
 		notes: z.string().optional(),
 	})

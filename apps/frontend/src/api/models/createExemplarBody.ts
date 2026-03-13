@@ -7,9 +7,9 @@
 
 export interface CreateExemplarBody {
 	surveyId: string;
-	sessionId: string;
+	sessionId?: string;
 	slotKey: string;
-	rawText: string;
+	rawText?: string;
 	extractedValue?: unknown | null;
 	notes?: string;
 }

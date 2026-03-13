@@ -76,7 +76,7 @@ function RubricDisplay({ rubric }: { rubric: DetailRubric }) {
 }
 
 export default function AdminRubricsPage() {
-	const [selectedSlot, setSelectedSlot] = useState(DETAIL_SCORABLE_SLOTS[0].key);
+	const [selectedSlot, setSelectedSlot] = useState<string>(DETAIL_SCORABLE_SLOTS[0].key);
 	const [surveyId] = useState(DEFAULT_SURVEY_ID);
 
 	const exemplarsQuery = useGetApiAdminExemplars(
