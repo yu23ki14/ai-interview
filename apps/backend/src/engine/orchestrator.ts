@@ -1,15 +1,15 @@
 import type { AnthropicProvider } from "@ai-sdk/anthropic";
 import { extractFromMessage } from "../ai/extractor.js";
-import { classifySafety } from "../ai/safety.js";
 import { renderQuestion } from "../ai/question-renderer.js";
+import { classifySafety } from "../ai/safety.js";
 import type { TurnExtraction } from "../schemas/extraction.js";
-import { type SafetyAssessment } from "../schemas/safety.js";
+import type { SafetyAssessment } from "../schemas/safety.js";
+import { calculateCompletionScore } from "./completion.js";
 import { detectForbiddenData } from "./forbidden.js";
 import { redactPII } from "./redaction.js";
-import { checkShouldStop } from "./stop-check.js";
-import { calculateCompletionScore } from "./completion.js";
-import { determineStage, type CaseSlots, type Stage } from "./stage.js";
 import { getNextSlot, getRemainingSlots, getSlotLabel } from "./slots.js";
+import { type CaseSlots, determineStage, type Stage } from "./stage.js";
+import { checkShouldStop } from "./stop-check.js";
 
 export interface ExtractedCaseData {
 	caseType?: string | null;
@@ -159,38 +159,32 @@ function mergeExtraction(
 	const newSkipped = extraction.unanswerable_slots ?? [];
 	const mergedSkipped = Array.from(new Set([...existing.skippedSlots, ...newSkipped]));
 
-	if (!facts) return { ...existing, skippedSlots: mergedSkipped, confirmationState: existing.confirmationState };
+	if (!facts)
+		return {
+			...existing,
+			skippedSlots: mergedSkipped,
+			confirmationState: existing.confirmationState,
+		};
 
 	return {
 		caseType: facts.case_type ?? existing.caseType,
 		severityLevel: facts.severity_level ?? existing.severityLevel,
 		incidentSummary: facts.incident_summary ?? existing.incidentSummary,
 		entryPoint: {
-			first_touch_channel:
-				facts.first_touch_channel ?? existing.entryPoint.first_touch_channel,
-			first_touch_platform:
-				facts.first_touch_platform ?? existing.entryPoint.first_touch_platform,
+			first_touch_channel: facts.first_touch_channel ?? existing.entryPoint.first_touch_channel,
+			first_touch_platform: facts.first_touch_platform ?? existing.entryPoint.first_touch_platform,
 			was_ad: facts.was_ad ?? existing.entryPoint.was_ad,
 			ad_format: facts.ad_format ?? existing.entryPoint.ad_format,
 			ad_platform: facts.ad_platform ?? existing.entryPoint.ad_platform,
-			ad_claim_type: mergeArrayField(
-				existing.entryPoint.ad_claim_type,
-				facts.ad_claim_type,
-			),
+			ad_claim_type: mergeArrayField(existing.entryPoint.ad_claim_type, facts.ad_claim_type),
 		},
 		actorProfile: {
-			claimed_role: mergeArrayField(
-				existing.actorProfile.claimed_role,
-				facts.claimed_role,
-			),
+			claimed_role: mergeArrayField(existing.actorProfile.claimed_role, facts.claimed_role),
 			claimed_affiliation: mergeArrayField(
 				existing.actorProfile.claimed_affiliation,
 				facts.claimed_affiliation,
 			),
-			trust_signal: mergeArrayField(
-				existing.actorProfile.trust_signal,
-				facts.trust_signal,
-			),
+			trust_signal: mergeArrayField(existing.actorProfile.trust_signal, facts.trust_signal),
 			identity_verification_claim: mergeArrayField(
 				existing.actorProfile.identity_verification_claim,
 				facts.identity_verification_claim,
@@ -198,14 +192,12 @@ function mergeExtraction(
 		},
 		interactionFlow: {
 			moved_to_external_channel:
-				facts.moved_to_external_channel ??
-				existing.interactionFlow.moved_to_external_channel,
+				facts.moved_to_external_channel ?? existing.interactionFlow.moved_to_external_channel,
 			external_channels: mergeArrayField(
 				existing.interactionFlow.external_channels,
 				facts.external_channels,
 			),
-			asked_for_payment:
-				facts.asked_for_payment ?? existing.interactionFlow.asked_for_payment,
+			asked_for_payment: facts.asked_for_payment ?? existing.interactionFlow.asked_for_payment,
 			asked_for_registration:
 				facts.asked_for_registration ?? existing.interactionFlow.asked_for_registration,
 			asked_for_id_submission:
@@ -213,25 +205,21 @@ function mergeExtraction(
 			asked_for_app_install:
 				facts.asked_for_app_install ?? existing.interactionFlow.asked_for_app_install,
 			asked_for_remote_control:
-				facts.asked_for_remote_control ??
-				existing.interactionFlow.asked_for_remote_control,
+				facts.asked_for_remote_control ?? existing.interactionFlow.asked_for_remote_control,
 			asked_for_crypto_transfer:
-				facts.asked_for_crypto_transfer ??
-				existing.interactionFlow.asked_for_crypto_transfer,
+				facts.asked_for_crypto_transfer ?? existing.interactionFlow.asked_for_crypto_transfer,
 			asked_for_bank_transfer:
 				facts.asked_for_bank_transfer ?? existing.interactionFlow.asked_for_bank_transfer,
 		},
 		harmOutcome: {
 			money_sent: facts.money_sent ?? existing.harmOutcome.money_sent,
-			estimated_amount_jpy:
-				facts.estimated_amount_jpy ?? existing.harmOutcome.estimated_amount_jpy,
+			estimated_amount_jpy: facts.estimated_amount_jpy ?? existing.harmOutcome.estimated_amount_jpy,
 			non_monetary_harm: mergeArrayField(
 				existing.harmOutcome.non_monetary_harm,
 				facts.non_monetary_harm,
 			),
 			attempt_stopped_before_payment:
-				facts.attempt_stopped_before_payment ??
-				existing.harmOutcome.attempt_stopped_before_payment,
+				facts.attempt_stopped_before_payment ?? existing.harmOutcome.attempt_stopped_before_payment,
 			felt_in_danger: facts.felt_in_danger ?? existing.harmOutcome.felt_in_danger,
 		},
 		psychology: {
@@ -247,21 +235,14 @@ function mergeExtraction(
 				existing.psychology.why_warning_signs_did_not_stop_action,
 				facts.why_warning_signs_did_not_stop_action,
 			),
-			emotions_during: mergeArrayField(
-				existing.psychology.emotions_during,
-				facts.emotions_during,
-			),
-			emotions_after: mergeArrayField(
-				existing.psychology.emotions_after,
-				facts.emotions_after,
-			),
+			emotions_during: mergeArrayField(existing.psychology.emotions_during, facts.emotions_during),
+			emotions_after: mergeArrayField(existing.psychology.emotions_after, facts.emotions_after),
 		},
 		evidence: {
 			has_screenshot: facts.has_screenshot ?? existing.evidence.has_screenshot,
 			has_chat_log: facts.has_chat_log ?? existing.evidence.has_chat_log,
 			has_transfer_record: facts.has_transfer_record ?? existing.evidence.has_transfer_record,
-			has_ad_image_or_url:
-				facts.has_ad_image_or_url ?? existing.evidence.has_ad_image_or_url,
+			has_ad_image_or_url: facts.has_ad_image_or_url ?? existing.evidence.has_ad_image_or_url,
 			has_account_identifier:
 				facts.has_account_identifier ?? existing.evidence.has_account_identifier,
 		},
@@ -330,13 +311,9 @@ function buildContextSummary(data: ExtractedCaseData): string {
 	if (data.harmOutcome.estimated_amount_jpy !== null)
 		parts.push(`Amount: ${data.harmOutcome.estimated_amount_jpy} JPY`);
 	if (data.psychology.why_it_felt_believable.length > 0)
-		parts.push(
-			`Why believable: ${data.psychology.why_it_felt_believable.join(", ")}`,
-		);
+		parts.push(`Why believable: ${data.psychology.why_it_felt_believable.join(", ")}`);
 	if (data.psychology.warning_signs_noticed.length > 0)
-		parts.push(
-			`Warning signs: ${data.psychology.warning_signs_noticed.join(", ")}`,
-		);
+		parts.push(`Warning signs: ${data.psychology.warning_signs_noticed.join(", ")}`);
 	return parts.length > 0 ? parts.join("\n") : "No information gathered yet.";
 }
 
@@ -460,10 +437,7 @@ export async function processTurn(
 		question = WRAP_UP_MESSAGE;
 		stage = "wrap_up";
 		shouldEnd = true;
-	} else if (
-		mergedData.confirmationState === "not_asked" &&
-		DEEPENING_SLOTS.has(nextSlot)
-	) {
+	} else if (mergedData.confirmationState === "not_asked" && DEEPENING_SLOTS.has(nextSlot)) {
 		// About to enter deepening phase — ask for confirmation first
 		const remaining = getRemainingSlots(slots, mergedData.skippedSlots);
 		question = buildConfirmationMessage(remaining);

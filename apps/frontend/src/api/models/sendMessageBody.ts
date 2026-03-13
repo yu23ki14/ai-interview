@@ -6,6 +6,6 @@
  */
 
 export interface SendMessageBody {
-  /** @minLength 1 */
-  content: string;
+	/** @minLength 1 */
+	content: string;
 }

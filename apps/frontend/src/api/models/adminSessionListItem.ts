@@ -6,11 +6,11 @@
  */
 
 export interface AdminSessionListItem {
-  id: string;
-  surveyId: string;
-  stage: string;
-  completionScore: number;
-  startedAt: string;
-  /** @nullable */
-  completedAt: string | null;
+	id: string;
+	surveyId: string;
+	stage: string;
+	completionScore: number;
+	startedAt: string;
+	/** @nullable */
+	completedAt: string | null;
 }

@@ -1,6 +1,6 @@
-import { generateObject } from "ai";
 import type { AnthropicProvider } from "@ai-sdk/anthropic";
-import { safetyAssessmentSchema, type SafetyAssessment } from "../schemas/safety.js";
+import { generateObject } from "ai";
+import { type SafetyAssessment, safetyAssessmentSchema } from "../schemas/safety.js";
 
 const SAFETY_PROMPT = `You are a safety classifier for a sensitive interview system.
 

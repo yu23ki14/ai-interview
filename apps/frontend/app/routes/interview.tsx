@@ -1,9 +1,8 @@
-import { useState, useRef, useEffect, useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { useParams, useNavigate } from "react-router";
-import { Button } from "~/components/ui/button";
-import { Textarea } from "~/components/ui/textarea";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useNavigate, useParams } from "react-router";
 import { Badge } from "~/components/ui/badge";
+import { Button } from "~/components/ui/button";
 import {
 	Dialog,
 	DialogContent,
@@ -12,13 +11,14 @@ import {
 	DialogTrigger,
 } from "~/components/ui/dialog";
 import { ScrollArea } from "~/components/ui/scroll-area";
+import { Textarea } from "~/components/ui/textarea";
 import {
-	useGetApiSessionsId,
-	useGetApiSessionsIdMessages,
-	usePostApiSessionsIdMessages,
-	useGetApiSessionsIdSummary,
 	getGetApiSessionsIdMessagesQueryKey,
 	getGetApiSessionsIdQueryKey,
+	useGetApiSessionsId,
+	useGetApiSessionsIdMessages,
+	useGetApiSessionsIdSummary,
+	usePostApiSessionsIdMessages,
 } from "../../src/api/gen/aIInterviewAPI";
 import type { TranscriptEntry } from "../../src/api/models";
 
@@ -56,9 +56,7 @@ function SummaryDialog({ sessionId }: { sessionId: string }) {
 					<DialogTitle>これまでの要約</DialogTitle>
 				</DialogHeader>
 				<ScrollArea className="max-h-[60dvh]">
-					{summaryQuery.isLoading && (
-						<p className="text-sm text-muted-foreground">読み込み中...</p>
-					)}
+					{summaryQuery.isLoading && <p className="text-sm text-muted-foreground">読み込み中...</p>}
 					{summaryQuery.isError && (
 						<p className="text-sm text-destructive">要約の取得に失敗しました。</p>
 					)}
@@ -75,9 +73,7 @@ function SummaryDialog({ sessionId }: { sessionId: string }) {
 										))}
 									</ul>
 								) : (
-									<p className="text-sm text-muted-foreground">
-										まだ確認済みの項目はありません。
-									</p>
+									<p className="text-sm text-muted-foreground">まだ確認済みの項目はありません。</p>
 								)}
 							</div>
 							<div>
@@ -91,9 +87,7 @@ function SummaryDialog({ sessionId }: { sessionId: string }) {
 										))}
 									</ul>
 								) : (
-									<p className="text-sm text-muted-foreground">
-										全ての項目が確認済みです。
-									</p>
+									<p className="text-sm text-muted-foreground">全ての項目が確認済みです。</p>
 								)}
 							</div>
 						</div>
@@ -220,9 +214,7 @@ export default function InterviewPage() {
 			<div className="flex h-dvh items-center justify-center p-4">
 				<div className="text-center">
 					<p className="mb-2 text-lg font-medium">エラーが発生しました</p>
-					<p className="text-sm text-muted-foreground">
-						セッション情報の取得に失敗しました。
-					</p>
+					<p className="text-sm text-muted-foreground">セッション情報の取得に失敗しました。</p>
 				</div>
 			</div>
 		);
@@ -234,9 +226,7 @@ export default function InterviewPage() {
 			<div className="border-b bg-background px-4 py-3">
 				<div className="mx-auto max-w-2xl">
 					<div className="flex items-center justify-between">
-						<h1 className="text-sm font-medium text-muted-foreground">
-							AIインタビュー
-						</h1>
+						<h1 className="text-sm font-medium text-muted-foreground">AIインタビュー</h1>
 						<Badge variant="secondary">{stageInfo.label}</Badge>
 					</div>
 				</div>
@@ -251,9 +241,7 @@ export default function InterviewPage() {
 							<p className="text-sm text-muted-foreground">送信中...</p>
 						</div>
 					) : latestAiMessage ? (
-						<p className="text-lg leading-relaxed whitespace-pre-wrap">
-							{latestAiMessage.content}
-						</p>
+						<p className="text-lg leading-relaxed whitespace-pre-wrap">{latestAiMessage.content}</p>
 					) : (
 						<p className="text-muted-foreground">メッセージを読み込んでいます...</p>
 					)}
@@ -279,10 +267,7 @@ export default function InterviewPage() {
 							rows={1}
 						/>
 						<div className="flex shrink-0 flex-col gap-1 self-end">
-							<Button
-								onClick={handleSend}
-								disabled={!input.trim() || sendMutation.isPending}
-							>
+							<Button onClick={handleSend} disabled={!input.trim() || sendMutation.isPending}>
 								送信
 							</Button>
 							<Button

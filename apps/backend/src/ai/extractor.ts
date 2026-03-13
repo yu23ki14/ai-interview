@@ -1,6 +1,6 @@
-import { generateObject } from "ai";
 import type { AnthropicProvider } from "@ai-sdk/anthropic";
-import { turnExtractionSchema, type TurnExtraction } from "../schemas/extraction.js";
+import { generateObject } from "ai";
+import { type TurnExtraction, turnExtractionSchema } from "../schemas/extraction.js";
 
 const EXTRACTOR_PROMPT = `You are an extraction engine for a civic research interview about online advertisement scams and scam-related near-miss experiences.
 

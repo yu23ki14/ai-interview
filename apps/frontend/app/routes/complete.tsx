@@ -19,8 +19,7 @@ export default function CompletePage() {
 				<CardContent className="flex flex-col gap-6">
 					<p className="text-muted-foreground">
 						貴重なお話をお聞かせいただき、誠にありがとうございます。
-						いただいた情報は、社会課題の解決に向けた調査・研究に
-						大切に活用させていただきます。
+						いただいた情報は、社会課題の解決に向けた調査・研究に 大切に活用させていただきます。
 					</p>
 
 					<p className="text-sm text-muted-foreground">

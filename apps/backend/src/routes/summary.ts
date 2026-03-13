@@ -1,10 +1,10 @@
-import { OpenAPIHono, createRoute, z } from "@hono/zod-openapi";
-import { drizzle } from "drizzle-orm/d1";
+import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { eq } from "drizzle-orm";
-import { interviewSessions, extractedCases } from "../db/schema.js";
-import { summaryApiResponseSchema, errorSchema } from "../schemas/api.js";
+import { drizzle } from "drizzle-orm/d1";
 import { createAnthropicProvider } from "../ai/provider.js";
 import { generateSummary } from "../ai/summary.js";
+import { extractedCases, interviewSessions } from "../db/schema.js";
+import { errorSchema, summaryApiResponseSchema } from "../schemas/api.js";
 
 type Bindings = {
 	DB: D1Database;
@@ -90,8 +90,7 @@ app.openapi(getSummaryRoute, async (c) => {
 	if (caseRecord.harmOutcome) {
 		const harm = caseRecord.harmOutcome;
 		if (harm.money_sent !== null) parts.push(`Money sent: ${harm.money_sent}`);
-		if (harm.estimated_amount_jpy !== null)
-			parts.push(`Amount: ${harm.estimated_amount_jpy} JPY`);
+		if (harm.estimated_amount_jpy !== null) parts.push(`Amount: ${harm.estimated_amount_jpy} JPY`);
 	}
 	if (caseRecord.psychology) {
 		const psy = caseRecord.psychology;
@@ -101,8 +100,7 @@ app.openapi(getSummaryRoute, async (c) => {
 			parts.push(`Warning signs: ${psy.warning_signs_noticed.join(", ")}`);
 	}
 
-	const caseDataStr =
-		parts.length > 0 ? parts.join("\n") : "No information gathered yet.";
+	const caseDataStr = parts.length > 0 ? parts.join("\n") : "No information gathered yet.";
 
 	const provider = createAnthropicProvider(c.env.ANTHROPIC_API_KEY);
 	const summary = await generateSummary(provider, caseDataStr);

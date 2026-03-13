@@ -4,8 +4,7 @@ const REDACTION_PATTERNS: Array<{ pattern: RegExp; label: string }> = [
 		label: "[REDACTED:email]",
 	},
 	{
-		pattern:
-			/(?:0\d{1,4}[-\s]?\d{1,4}[-\s]?\d{3,4}|\+81[-\s]?\d{1,4}[-\s]?\d{1,4}[-\s]?\d{3,4})/g,
+		pattern: /(?:0\d{1,4}[-\s]?\d{1,4}[-\s]?\d{3,4}|\+81[-\s]?\d{1,4}[-\s]?\d{1,4}[-\s]?\d{3,4})/g,
 		label: "[REDACTED:phone]",
 	},
 	{

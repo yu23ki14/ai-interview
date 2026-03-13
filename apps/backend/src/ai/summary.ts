@@ -1,6 +1,6 @@
-import { generateObject } from "ai";
 import type { AnthropicProvider } from "@ai-sdk/anthropic";
-import { summaryResponseSchema, type SummaryResponse } from "../schemas/summary.js";
+import { generateObject } from "ai";
+import { type SummaryResponse, summaryResponseSchema } from "../schemas/summary.js";
 
 const SUMMARY_PROMPT = `You are a summarization engine for a sensitive interview.
 

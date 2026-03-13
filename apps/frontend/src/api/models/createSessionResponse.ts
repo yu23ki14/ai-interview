@@ -4,9 +4,9 @@
  * AI Interview API
  * OpenAPI spec version: 1.0.0
  */
-import type { Session } from './session';
+import type { Session } from "./session";
 
 export interface CreateSessionResponse {
-  session: Session;
-  message: string;
+	session: Session;
+	message: string;
 }

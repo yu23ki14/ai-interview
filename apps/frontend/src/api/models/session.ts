@@ -6,16 +6,16 @@
  */
 
 export interface Session {
-  id: string;
-  surveyId: string;
-  stage: string;
-  completionScore: number;
-  consentGiven: boolean;
-  burdenLevel: number;
-  riskLevel: string;
-  /** @nullable */
-  currentSlot: string | null;
-  startedAt: string;
-  /** @nullable */
-  completedAt: string | null;
+	id: string;
+	surveyId: string;
+	stage: string;
+	completionScore: number;
+	consentGiven: boolean;
+	burdenLevel: number;
+	riskLevel: string;
+	/** @nullable */
+	currentSlot: string | null;
+	startedAt: string;
+	/** @nullable */
+	completedAt: string | null;
 }

@@ -6,6 +6,6 @@
  */
 
 export interface SummaryResponse {
-  knownPoints: string[];
-  remainingPoints: string[];
+	knownPoints: string[];
+	remainingPoints: string[];
 }

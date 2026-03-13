@@ -1,24 +1,20 @@
-import { OpenAPIHono, createRoute, z } from "@hono/zod-openapi";
+import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
+import { asc, eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
-import { eq, asc } from "drizzle-orm";
-import {
-	interviewSessions,
-	extractedCases,
-	transcripts,
-} from "../db/schema.js";
-import {
-	transcriptEntrySchema,
-	sendMessageBodySchema,
-	sendMessageResponseSchema,
-	errorSchema,
-} from "../schemas/api.js";
 import { createAnthropicProvider } from "../ai/provider.js";
+import { extractedCases, interviewSessions, transcripts } from "../db/schema.js";
+import { getMissingFields } from "../engine/completion.js";
 import {
-	processTurn,
 	createDefaultCaseData,
 	type ExtractedCaseData,
+	processTurn,
 } from "../engine/orchestrator.js";
-import { getMissingFields } from "../engine/completion.js";
+import {
+	errorSchema,
+	sendMessageBodySchema,
+	sendMessageResponseSchema,
+	transcriptEntrySchema,
+} from "../schemas/api.js";
 
 type Bindings = {
 	DB: D1Database;
@@ -185,7 +181,8 @@ app.openapi(sendMessageRoute, async (c) => {
 					what_should_be_improved_first: [],
 				},
 				skippedSlots: caseRecord.skippedSlots ?? [],
-				confirmationState: (caseRecord.confirmationState as "not_asked" | "pending" | "done") ?? "not_asked",
+				confirmationState:
+					(caseRecord.confirmationState as "not_asked" | "pending" | "done") ?? "not_asked",
 			}
 		: createDefaultCaseData();
 
@@ -225,10 +222,7 @@ app.openapi(sendMessageRoute, async (c) => {
 		updateData.completedAt = new Date();
 	}
 
-	await db
-		.update(interviewSessions)
-		.set(updateData)
-		.where(eq(interviewSessions.id, id));
+	await db.update(interviewSessions).set(updateData).where(eq(interviewSessions.id, id));
 
 	// Update extracted case
 	const data = result.extractedData;

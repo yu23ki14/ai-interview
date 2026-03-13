@@ -1,5 +1,5 @@
-import { generateText } from "ai";
 import type { AnthropicProvider } from "@ai-sdk/anthropic";
+import { generateText } from "ai";
 
 const QUESTION_RENDERER_PROMPT = `You are a careful interview question writer for a civic research tool.
 

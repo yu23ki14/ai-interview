@@ -1,4 +1,4 @@
-import * as React from "react";
+import type * as React from "react";
 
 import { cn } from "~/lib/utils";
 
@@ -19,10 +19,7 @@ function CardHeader({ className, ...props }: React.ComponentProps<"div">) {
 	return (
 		<div
 			data-slot="card-header"
-			className={cn(
-				"flex flex-col gap-1.5 px-6 [.border-b]:pb-6",
-				className,
-			)}
+			className={cn("flex flex-col gap-1.5 px-6 [.border-b]:pb-6", className)}
 			{...props}
 		/>
 	);
@@ -49,13 +46,7 @@ function CardDescription({ className, ...props }: React.ComponentProps<"div">) {
 }
 
 function CardContent({ className, ...props }: React.ComponentProps<"div">) {
-	return (
-		<div
-			data-slot="card-content"
-			className={cn("px-6", className)}
-			{...props}
-		/>
-	);
+	return <div data-slot="card-content" className={cn("px-6", className)} {...props} />;
 }
 
 function CardFooter({ className, ...props }: React.ComponentProps<"div">) {

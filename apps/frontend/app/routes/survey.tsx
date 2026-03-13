@@ -1,4 +1,5 @@
-import { useParams, useNavigate } from "react-router";
+import { useNavigate, useParams } from "react-router";
+import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
 import {
 	Card,
@@ -8,11 +9,7 @@ import {
 	CardHeader,
 	CardTitle,
 } from "~/components/ui/card";
-import { Badge } from "~/components/ui/badge";
-import {
-	useGetApiSurveysId,
-	usePostApiSessions,
-} from "../../src/api/gen/aIInterviewAPI";
+import { useGetApiSurveysId, usePostApiSessions } from "../../src/api/gen/aIInterviewAPI";
 
 export default function SurveyPage() {
 	const { surveyId } = useParams();
@@ -66,9 +63,7 @@ export default function SurveyPage() {
 				</CardHeader>
 				<CardContent className="flex flex-col gap-4">
 					<div className="flex items-center gap-2">
-						<Badge variant="secondary">
-							所要時間：約{survey?.estimatedMinutes}分
-						</Badge>
+						<Badge variant="secondary">所要時間：約{survey?.estimatedMinutes}分</Badge>
 					</div>
 					<div className="rounded-lg bg-muted/50 p-4 text-sm text-muted-foreground">
 						<p className="mb-2 font-medium text-foreground">ご協力にあたって</p>
@@ -84,9 +79,7 @@ export default function SurveyPage() {
 					<Button
 						size="lg"
 						className="w-full"
-						onClick={() =>
-							createSessionMutation.mutate({ data: { surveyId: surveyId! } })
-						}
+						onClick={() => createSessionMutation.mutate({ data: { surveyId: surveyId! } })}
 						disabled={createSessionMutation.isPending}
 					>
 						{createSessionMutation.isPending ? "準備中..." : "インタビューを開始する"}

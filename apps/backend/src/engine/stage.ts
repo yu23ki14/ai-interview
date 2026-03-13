@@ -36,11 +36,7 @@ function isFilled(value: unknown): boolean {
 	return true;
 }
 
-function isFilledOrSkipped(
-	value: unknown,
-	slotName: string,
-	skippedSlots: string[],
-): boolean {
+function isFilledOrSkipped(value: unknown, slotName: string, skippedSlots: string[]): boolean {
 	if (skippedSlots.includes(slotName)) return true;
 	return isFilled(value);
 }
@@ -57,13 +53,19 @@ export function determineStage(slots: CaseSlots, skippedSlots: string[] = []): S
 		return "clarify_entry_point";
 	}
 
-	if (!isFilledOrSkipped(slots.moved_to_external_channel, "moved_to_external_channel", skippedSlots)) {
+	if (
+		!isFilledOrSkipped(slots.moved_to_external_channel, "moved_to_external_channel", skippedSlots)
+	) {
 		return "clarify_flow";
 	}
 
 	if (
 		!isFilledOrSkipped(slots.money_sent, "money_sent", skippedSlots) &&
-		!isFilledOrSkipped(slots.attempt_stopped_before_payment, "attempt_stopped_before_payment", skippedSlots)
+		!isFilledOrSkipped(
+			slots.attempt_stopped_before_payment,
+			"attempt_stopped_before_payment",
+			skippedSlots,
+		)
 	) {
 		return "clarify_harm";
 	}
@@ -73,8 +75,16 @@ export function determineStage(slots: CaseSlots, skippedSlots: string[] = []): S
 	}
 
 	if (
-		!isFilledOrSkipped(slots.what_platform_design_might_have_helped, "what_platform_design_might_have_helped", skippedSlots) &&
-		!isFilledOrSkipped(slots.what_should_be_improved_first, "what_should_be_improved_first", skippedSlots)
+		!isFilledOrSkipped(
+			slots.what_platform_design_might_have_helped,
+			"what_platform_design_might_have_helped",
+			skippedSlots,
+		) &&
+		!isFilledOrSkipped(
+			slots.what_should_be_improved_first,
+			"what_should_be_improved_first",
+			skippedSlots,
+		)
 	) {
 		return "clarify_prevention";
 	}

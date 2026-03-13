@@ -6,5 +6,5 @@
  */
 
 export interface CreateSessionBody {
-  surveyId: string;
+	surveyId: string;
 }

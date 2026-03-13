@@ -6,11 +6,11 @@
  */
 
 export interface Survey {
-  id: string;
-  title: string;
-  description: string;
-  theme: string;
-  estimatedMinutes: number;
-  isActive: boolean;
-  createdAt: string;
+	id: string;
+	title: string;
+	description: string;
+	theme: string;
+	estimatedMinutes: number;
+	isActive: boolean;
+	createdAt: string;
 }

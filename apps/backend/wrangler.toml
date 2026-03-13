@@ -1,4 +1,4 @@
-name = "my-worker"
+name = "ai-interview"
 main = "src/index.ts"
 compatibility_date = "2025-09-23"
 compatibility_flags = ["nodejs_compat"]
@@ -13,6 +13,6 @@ ENVIRONMENT = "production"
 
 [[d1_databases]]
 binding = "DB"
-database_name = "my-database"
-database_id = "local"
+database_name = "ai-interview"
+database_id = "042f6645-6d80-4c5e-b1fe-7210a4312b31"
 migrations_dir = "migrations"

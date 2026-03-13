@@ -8,4 +8,4 @@
 /**
  * @nullable
  */
-export type AdminSessionDetailExtractedCase = {[key: string]: unknown | null} | null;
+export type AdminSessionDetailExtractedCase = { [key: string]: unknown | null } | null;

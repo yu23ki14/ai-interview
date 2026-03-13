@@ -6,9 +6,9 @@
  */
 
 export interface SendMessageResponse {
-  message: string;
-  stage: string;
-  completionScore: number;
-  shouldEnd: boolean;
-  safetyWarning?: string;
+	message: string;
+	stage: string;
+	completionScore: number;
+	shouldEnd: boolean;
+	safetyWarning?: string;
 }

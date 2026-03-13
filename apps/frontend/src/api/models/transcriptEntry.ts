@@ -6,10 +6,10 @@
  */
 
 export interface TranscriptEntry {
-  id: string;
-  sessionId: string;
-  turnIndex: number;
-  speaker: string;
-  content: string;
-  createdAt: string;
+	id: string;
+	sessionId: string;
+	turnIndex: number;
+	speaker: string;
+	content: string;
+	createdAt: string;
 }

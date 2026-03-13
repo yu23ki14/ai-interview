@@ -33,8 +33,7 @@ const FORBIDDEN_PATTERNS: Array<{ category: string; pattern: RegExp }> = [
 	},
 	{
 		category: "full_name",
-		pattern:
-			/(?:名前は|氏名[\s:：]*)[\p{Script=Han}]{1,4}\s?[\p{Script=Han}]{1,4}/u,
+		pattern: /(?:名前は|氏名[\s:：]*)[\p{Script=Han}]{1,4}\s?[\p{Script=Han}]{1,4}/u,
 	},
 ];
 
