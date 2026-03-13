@@ -26,7 +26,7 @@ export async function classifySafety(
 	message: string,
 ): Promise<SafetyAssessment> {
 	const { object } = await generateObject({
-		model: provider("claude-sonnet-4-20250514"),
+		model: provider("claude-haiku-4-5-20251001"),
 		schema: safetyAssessmentSchema,
 		system: SAFETY_PROMPT,
 		messages: [{ role: "user", content: message }],

@@ -164,7 +164,7 @@ function SlotCardItem({
 export default function AdminDetailPage() {
 	const { sessionId } = useParams();
 
-	const detailQuery = useGetApiAdminSessionsId(sessionId!, {
+	const detailQuery = useGetApiAdminSessionsId(sessionId ?? "", {
 		query: { enabled: !!sessionId },
 	});
 

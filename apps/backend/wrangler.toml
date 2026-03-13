@@ -11,6 +11,9 @@ ENVIRONMENT = "production"
 
 # ANTHROPIC_API_KEY is set via .dev.vars (local) or Workers secrets (production)
 
+[triggers]
+crons = ["0 * * * *"]
+
 [[d1_databases]]
 binding = "DB"
 database_name = "ai-interview"

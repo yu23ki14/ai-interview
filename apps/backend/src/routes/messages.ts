@@ -1,18 +1,22 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { asc, eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
+import { scoreDetailBatch } from "../ai/detail-scorer.js";
 import { createAnthropicProvider } from "../ai/provider.js";
 import {
 	detailRubrics,
+	exemplarAnswers,
 	extractedCases,
 	interviewSessions,
 	surveys,
 	transcripts,
 } from "../db/schema.js";
-import { getMissingFields } from "../engine/completion.js";
+import { calculateCompletionScore, getMissingFields } from "../engine/completion.js";
 import {
+	caseDataToSlots,
 	createDefaultCaseData,
 	type ExtractedCaseData,
+	getSlotsNeedingScoring,
 	processTurn,
 } from "../engine/orchestrator.js";
 import {
@@ -190,78 +194,29 @@ app.openapi(sendMessageRoute, async (c) => {
 				confirmationState:
 					(caseRecord.confirmationState as "not_asked" | "pending" | "done") ?? "not_asked",
 				detailScores: (caseRecord.detailScoresData as Record<string, number>) ?? {},
-				followedUpSlots: [],
+				followedUpSlots: (caseRecord.followedUpSlots as string[]) ?? [],
 			}
 		: createDefaultCaseData();
 
-	// Load active rubrics and survey threshold in parallel
-	const [activeRubricRows, survey] = await Promise.all([
-		db.select().from(detailRubrics).where(eq(detailRubrics.status, "active")).all(),
-		db.select().from(surveys).where(eq(surveys.id, session.surveyId)).get(),
-	]);
-	const activeRubricsMap = new Map(
-		activeRubricRows.map((r) => [
-			r.slotKey,
-			r.criteria as {
-				slot_key: string;
-				version: number;
-				dimensions: {
-					name: string;
-					description: string;
-					weight: number;
-					levels: Record<string, string>;
-				}[];
-			},
-		]),
-	);
+	// Load survey threshold for detail scoring
+	const survey = await db.select().from(surveys).where(eq(surveys.id, session.surveyId)).get();
 	const detailThreshold = survey?.detailThreshold;
 
-	// Process turn through orchestrator
+	// Process turn through orchestrator (extraction + safety + question generation)
 	const provider = createAnthropicProvider(c.env.ANTHROPIC_API_KEY);
 	const result = await processTurn(
 		provider,
 		content,
 		conversationHistory,
 		currentCaseData,
-		activeRubricsMap,
 		detailThreshold,
+		session.currentSlot,
 	);
 
 	// Calculate next turn index
 	const nextTurnIndex = existingTranscripts.length;
 
-	// Save user message transcript
-	await db.insert(transcripts).values({
-		id: crypto.randomUUID(),
-		sessionId: id,
-		turnIndex: nextTurnIndex,
-		speaker: "user",
-		content: result.redactedMessage,
-		createdAt: new Date(),
-	});
-
-	// Save AI response transcript
-	await db.insert(transcripts).values({
-		id: crypto.randomUUID(),
-		sessionId: id,
-		turnIndex: nextTurnIndex + 1,
-		speaker: "ai",
-		content: result.question,
-		createdAt: new Date(),
-	});
-
-	// Update session
-	const updateData: Record<string, unknown> = {
-		stage: result.stage,
-		completionScore: result.completionScore,
-	};
-	if (result.shouldEnd) {
-		updateData.completedAt = new Date();
-	}
-
-	await db.update(interviewSessions).set(updateData).where(eq(interviewSessions.id, id));
-
-	// Update extracted case
+	// Save transcripts, update session, and update extracted case
 	const data = result.extractedData;
 	const missingFields = getMissingFields({
 		case_type: data.caseType,
@@ -287,38 +242,150 @@ app.openapi(sendMessageRoute, async (c) => {
 		what_should_be_improved_first: data.preventionSignal.what_should_be_improved_first,
 	});
 
-	await db
-		.update(extractedCases)
-		.set({
-			caseType: data.caseType,
-			severityLevel: data.severityLevel,
-			incidentSummary: data.incidentSummary,
-			entryPoint: data.entryPoint,
-			actorProfile: data.actorProfile,
-			interactionFlow: data.interactionFlow,
-			harmOutcome: data.harmOutcome,
-			psychology: data.psychology,
-			evidence: data.evidence,
-			preventionSignal: data.preventionSignal,
-			skippedSlots: data.skippedSlots,
-			confirmationState: data.confirmationState,
-			safetyMeta: {
-				pii_detected:
-					result.safetyAssessment.pii_detected ||
-					(result.forbiddenCategories ? result.forbiddenCategories.length > 0 : false),
-				secret_detected: result.safetyAssessment.secret_detected,
-				burden_level: result.safetyAssessment.burden_level,
-				risk_level: result.safetyAssessment.risk_level,
-			},
-			detailScoresData: result.extractedData.detailScores,
-			qualityMeta: {
-				completion_score: result.completionScore,
-				missing_fields: missingFields,
-				confidence_notes: [],
-			},
-			updatedAt: new Date(),
-		})
-		.where(eq(extractedCases.sessionId, id));
+	const sessionUpdateData: Record<string, unknown> = {
+		stage: result.stage,
+		completionScore: result.completionScore,
+		currentSlot: result.nextSlot,
+	};
+	if (result.shouldEnd) {
+		sessionUpdateData.completedAt = new Date();
+	}
+
+	// Run DB writes in parallel
+	await Promise.all([
+		db.insert(transcripts).values({
+			id: crypto.randomUUID(),
+			sessionId: id,
+			turnIndex: nextTurnIndex,
+			speaker: "user",
+			content: result.redactedMessage,
+			createdAt: new Date(),
+		}),
+		db.insert(transcripts).values({
+			id: crypto.randomUUID(),
+			sessionId: id,
+			turnIndex: nextTurnIndex + 1,
+			speaker: "ai",
+			content: result.question,
+			createdAt: new Date(),
+		}),
+		db.update(interviewSessions).set(sessionUpdateData).where(eq(interviewSessions.id, id)),
+		db
+			.update(extractedCases)
+			.set({
+				caseType: data.caseType,
+				severityLevel: data.severityLevel,
+				incidentSummary: data.incidentSummary,
+				entryPoint: data.entryPoint,
+				actorProfile: data.actorProfile,
+				interactionFlow: data.interactionFlow,
+				harmOutcome: data.harmOutcome,
+				psychology: data.psychology,
+				evidence: data.evidence,
+				preventionSignal: data.preventionSignal,
+				skippedSlots: data.skippedSlots,
+				followedUpSlots: data.followedUpSlots,
+				confirmationState: data.confirmationState,
+				safetyMeta: {
+					pii_detected:
+						result.safetyAssessment.pii_detected ||
+						(result.forbiddenCategories ? result.forbiddenCategories.length > 0 : false),
+					secret_detected: result.safetyAssessment.secret_detected,
+					burden_level: result.safetyAssessment.burden_level,
+					risk_level: result.safetyAssessment.risk_level,
+				},
+				detailScoresData: data.detailScores,
+				qualityMeta: {
+					completion_score: result.completionScore,
+					missing_fields: missingFields,
+					confidence_notes: [],
+				},
+				updatedAt: new Date(),
+			})
+			.where(eq(extractedCases.sessionId, id)),
+	]);
+
+	// Background: run detail scoring after response is sent (via waitUntil)
+	const slots = caseDataToSlots(data);
+	const slotsToScore = getSlotsNeedingScoring(slots, data.detailScores);
+	if (slotsToScore.length > 0) {
+		const bgTask = async () => {
+			try {
+				// Load rubrics and exemplars for scoring
+				const [rubricRows, exemplarRows] = await Promise.all([
+					db.select().from(detailRubrics).where(eq(detailRubrics.status, "active")).all(),
+					db
+						.select()
+						.from(exemplarAnswers)
+						.where(eq(exemplarAnswers.surveyId, session.surveyId))
+						.all(),
+				]);
+				const rubricsMap = new Map(
+					rubricRows.map((r) => [
+						r.slotKey,
+						r.criteria as {
+							slot_key: string;
+							version: number;
+							dimensions: {
+								name: string;
+								description: string;
+								weight: number;
+								levels: Record<string, string>;
+							}[];
+						},
+					]),
+				);
+				const samplesMap = new Map<string, { rawText: string }>();
+				for (const ex of exemplarRows) {
+					if (!samplesMap.has(ex.slotKey)) {
+						samplesMap.set(ex.slotKey, { rawText: ex.rawText });
+					}
+				}
+
+				// Only score slots that have a rubric or sample
+				const scorable = slotsToScore.filter(
+					({ slotKey }) => rubricsMap.has(slotKey) || samplesMap.has(slotKey),
+				);
+				if (scorable.length === 0) return;
+
+				const newScores = await scoreDetailBatch(provider, scorable, rubricsMap, samplesMap);
+
+				// Monotonic increase: keep the higher score
+				const updatedScores = { ...data.detailScores };
+				for (const [key, score] of Object.entries(newScores)) {
+					const existing = updatedScores[key];
+					if (existing === undefined || score > existing) {
+						updatedScores[key] = score;
+					}
+				}
+
+				// Recalculate completion score with new detail scores
+				const newCompletionScore = calculateCompletionScore(slots, updatedScores);
+
+				// Update DB with new scores
+				await db
+					.update(extractedCases)
+					.set({
+						detailScoresData: updatedScores,
+						qualityMeta: {
+							completion_score: newCompletionScore,
+							missing_fields: missingFields,
+							confidence_notes: [],
+						},
+						updatedAt: new Date(),
+					})
+					.where(eq(extractedCases.sessionId, id));
+
+				await db
+					.update(interviewSessions)
+					.set({ completionScore: newCompletionScore })
+					.where(eq(interviewSessions.id, id));
+			} catch (e) {
+				console.error("Background detail scoring failed:", e);
+			}
+		};
+		c.executionCtx.waitUntil(bgTask());
+	}
 
 	return c.json(
 		{

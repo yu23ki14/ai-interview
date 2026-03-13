@@ -116,7 +116,7 @@ export const exemplarAnswerSchema = z
 	.object({
 		id: z.string(),
 		surveyId: z.string(),
-		sessionId: z.string(),
+		sessionId: z.string().nullable(),
 		slotKey: z.string(),
 		rawText: z.string(),
 		extractedValue: z.unknown(),
@@ -129,7 +129,7 @@ export const exemplarAnswerSchema = z
 export const createExemplarBodySchema = z
 	.object({
 		surveyId: z.string(),
-		sessionId: z.string(),
+		sessionId: z.string().optional(),
 		slotKey: z.string(),
 		rawText: z.string(),
 		extractedValue: z.unknown(),

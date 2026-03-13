@@ -1,0 +1,1 @@
+ALTER TABLE `extracted_cases` ADD `followed_up_slots` text;

@@ -141,11 +141,13 @@ export default function InterviewPage() {
 	const [input, setInput] = useState("");
 	const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-	const sessionQuery = useGetApiSessionsId(sessionId!, {
+	const sid = sessionId ?? "";
+
+	const sessionQuery = useGetApiSessionsId(sid, {
 		query: { enabled: !!sessionId },
 	});
 
-	const messagesQuery = useGetApiSessionsIdMessages(sessionId!, {
+	const messagesQuery = useGetApiSessionsIdMessages(sid, {
 		query: { enabled: !!sessionId },
 	});
 
@@ -153,10 +155,10 @@ export default function InterviewPage() {
 		mutation: {
 			onSuccess: (result) => {
 				queryClient.invalidateQueries({
-					queryKey: getGetApiSessionsIdMessagesQueryKey(sessionId!),
+					queryKey: getGetApiSessionsIdMessagesQueryKey(sid),
 				});
 				queryClient.invalidateQueries({
-					queryKey: getGetApiSessionsIdQueryKey(sessionId!),
+					queryKey: getGetApiSessionsIdQueryKey(sid),
 				});
 				if (result.status === 200 && result.data.shouldEnd) {
 					navigate(`/complete/${sessionId}`);
@@ -169,14 +171,14 @@ export default function InterviewPage() {
 		const trimmed = input.trim();
 		if (!trimmed || sendMutation.isPending) return;
 		setInput("");
-		sendMutation.mutate({ id: sessionId!, data: { content: trimmed } });
-	}, [input, sendMutation, sessionId]);
+		sendMutation.mutate({ id: sid, data: { content: trimmed } });
+	}, [input, sendMutation, sid]);
 
 	const handleSkip = useCallback(() => {
 		if (sendMutation.isPending) return;
 		setInput("");
-		sendMutation.mutate({ id: sessionId!, data: { content: "パス" } });
-	}, [sendMutation, sessionId]);
+		sendMutation.mutate({ id: sid, data: { content: "パス" } });
+	}, [sendMutation, sid]);
 
 	const handleKeyDown = useCallback(
 		(e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -225,9 +227,28 @@ export default function InterviewPage() {
 			{/* Header */}
 			<div className="border-b bg-background px-4 py-3">
 				<div className="mx-auto max-w-2xl">
-					<div className="flex items-center justify-between">
+					<div className="mb-2 flex items-center justify-between">
 						<h1 className="text-sm font-medium text-muted-foreground">AIインタビュー</h1>
 						<Badge variant="secondary">{stageInfo.label}</Badge>
+					</div>
+					{/* Progress bar */}
+					<div className="flex items-center gap-1">
+						{STAGES.map((stage, i) => (
+							<div key={stage.label} className="flex flex-1 flex-col items-center gap-1">
+								<div
+									className={`h-1.5 w-full rounded-full ${
+										i <= stageInfo.index ? "bg-primary" : "bg-muted"
+									}`}
+								/>
+								<span
+									className={`text-[10px] leading-tight ${
+										i === stageInfo.index ? "font-medium text-primary" : "text-muted-foreground"
+									}`}
+								>
+									{stage.label}
+								</span>
+							</div>
+						))}
 					</div>
 				</div>
 			</div>
@@ -252,7 +273,7 @@ export default function InterviewPage() {
 			<div className="border-t bg-background px-4 py-3">
 				<div className="mx-auto max-w-2xl">
 					<div className="mb-3 flex gap-2">
-						<SummaryDialog sessionId={sessionId!} />
+						<SummaryDialog sessionId={sid} />
 						<TranscriptDialog messages={messages} />
 					</div>
 					<div className="flex gap-2">

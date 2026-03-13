@@ -15,7 +15,9 @@ export default function SurveyPage() {
 	const { surveyId } = useParams();
 	const navigate = useNavigate();
 
-	const surveyQuery = useGetApiSurveysId(surveyId!, {
+	const sid = surveyId ?? "";
+
+	const surveyQuery = useGetApiSurveysId(sid, {
 		query: { enabled: !!surveyId },
 	});
 
@@ -79,7 +81,7 @@ export default function SurveyPage() {
 					<Button
 						size="lg"
 						className="w-full"
-						onClick={() => createSessionMutation.mutate({ data: { surveyId: surveyId! } })}
+						onClick={() => createSessionMutation.mutate({ data: { surveyId: sid } })}
 						disabled={createSessionMutation.isPending}
 					>
 						{createSessionMutation.isPending ? "準備中..." : "インタビューを開始する"}

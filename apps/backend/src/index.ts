@@ -2,6 +2,7 @@ import { swaggerUI } from "@hono/swagger-ui";
 import { OpenAPIHono } from "@hono/zod-openapi";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
+import { handlePostValidation } from "./cron/post-validation.js";
 import adminRoutes from "./routes/admin.js";
 import adminExemplarRoutes from "./routes/admin-exemplars.js";
 import adminRubricRoutes from "./routes/admin-rubrics.js";
@@ -25,7 +26,7 @@ const app = new OpenAPIHono<{ Bindings: Bindings }>({
 });
 
 app.use("/*", logger());
-app.use("/*", cors({ origin: "http://localhost:5173" }));
+app.use("/*", cors({ origin: "*" }));
 
 app.get("/", (c) => c.json({ message: "Hello Hono!" }));
 
@@ -48,4 +49,13 @@ app.doc("/api/openapi.json", {
 // Swagger UI
 app.get("/api/docs", swaggerUI({ url: "/api/openapi.json" }));
 
-export default app;
+export default {
+	fetch: app.fetch,
+	async scheduled(
+		_event: ScheduledEvent,
+		env: { DB: D1Database; ANTHROPIC_API_KEY: string },
+		ctx: ExecutionContext,
+	) {
+		ctx.waitUntil(handlePostValidation(env));
+	},
+};

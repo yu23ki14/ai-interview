@@ -1,12 +1,17 @@
 {
-	"$schema": "https://biomejs.dev/schemas/2.3.14/schema.json",
+	"$schema": "https://biomejs.dev/schemas/2.4.3/schema.json",
 	"vcs": {
 		"enabled": true,
 		"clientKind": "git",
 		"useIgnoreFile": true
 	},
 	"files": {
-		"ignoreUnknown": false
+		"ignoreUnknown": false,
+		"includes": [
+			"**",
+			"!apps/backend/worker-configuration.d.ts",
+			"!apps/frontend/src/api/gen"
+		]
 	},
 	"formatter": {
 		"enabled": true,

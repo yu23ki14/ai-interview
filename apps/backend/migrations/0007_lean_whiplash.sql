@@ -1,0 +1,1 @@
+ALTER TABLE `extracted_cases` ADD `post_validated_at` integer;

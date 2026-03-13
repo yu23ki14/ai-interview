@@ -100,7 +100,7 @@ app.openapi(createExemplarRoute, async (c) => {
 	await db.insert(exemplarAnswers).values({
 		id,
 		surveyId: body.surveyId,
-		sessionId: body.sessionId,
+		sessionId: body.sessionId ?? null,
 		slotKey: body.slotKey,
 		rawText: body.rawText,
 		extractedValue: body.extractedValue,
@@ -113,7 +113,7 @@ app.openapi(createExemplarRoute, async (c) => {
 		{
 			id,
 			surveyId: body.surveyId,
-			sessionId: body.sessionId,
+			sessionId: body.sessionId ?? null,
 			slotKey: body.slotKey,
 			rawText: body.rawText,
 			extractedValue: body.extractedValue,

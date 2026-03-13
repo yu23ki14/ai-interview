@@ -17,11 +17,11 @@ const detailScoreResultSchema = z.object({
 	dimension_scores: z.array(
 		z.object({
 			name: z.string(),
-			score: z.number().min(0).max(1),
+			score: z.number().describe("0.0 to 1.0"),
 			reason: z.string(),
 		}),
 	),
-	overall_score: z.number().min(0).max(1),
+	overall_score: z.number().describe("0.0 to 1.0"),
 });
 
 export type DetailScoreResult = z.infer<typeof detailScoreResultSchema>;
@@ -42,11 +42,17 @@ export async function scoreDetail(
 	slotKey: string,
 	extractedValue: unknown,
 	rubric?: RubricCriteria | null,
+	sampleText?: string | null,
 ): Promise<DetailScoreResult> {
 	let rubricSection: string;
 
 	if (rubric) {
 		rubricSection = `Evaluation rubric:\n${JSON.stringify(rubric, null, 2)}\n\nScore each dimension according to the defined levels.`;
+	} else if (sampleText) {
+		rubricSection =
+			`Reference sample answer (represents approximately 80% detail level):\n${sampleText}\n\n` +
+			`Compare the participant's answer to this reference.\n` +
+			`Consider: specificity, multi-faceted reasoning, psychological process, temporal context.`;
 	} else {
 		rubricSection =
 			"No rubric available. Use your general assessment based on specificity, multi-faceted reasoning, psychological process, and temporal context.";
@@ -75,11 +81,13 @@ export async function scoreDetailBatch(
 	provider: AnthropicProvider,
 	slotsToScore: Array<{ slotKey: string; extractedValue: unknown }>,
 	rubrics: Map<string, RubricCriteria>,
+	sampleExemplars?: Map<string, { rawText: string }>,
 ): Promise<Record<string, number>> {
 	const results = await Promise.all(
 		slotsToScore.map(async ({ slotKey, extractedValue }) => {
 			const rubric = rubrics.get(slotKey) ?? null;
-			const result = await scoreDetail(provider, slotKey, extractedValue, rubric);
+			const sampleText = rubric ? null : (sampleExemplars?.get(slotKey)?.rawText ?? null);
+			const result = await scoreDetail(provider, slotKey, extractedValue, rubric, sampleText);
 			return { slotKey, score: result.overall_score };
 		}),
 	);

@@ -3,7 +3,7 @@ import { Button } from "~/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~/components/ui/card";
 import type { Route } from "./+types/home";
 
-export function meta({}: Route.MetaArgs) {
+export function meta(_args: Route.MetaArgs) {
 	return [
 		{ title: "AIインタビューシステム" },
 		{ name: "description", content: "AIを活用した構造化インタビュープラットフォーム" },

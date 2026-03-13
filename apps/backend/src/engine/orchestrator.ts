@@ -1,12 +1,11 @@
 import type { AnthropicProvider } from "@ai-sdk/anthropic";
-import { scoreDetailBatch } from "../ai/detail-scorer.js";
 import { extractFromMessage } from "../ai/extractor.js";
 import { type DetailContext, renderQuestion } from "../ai/question-renderer.js";
 import { classifySafety } from "../ai/safety.js";
 import type { TurnExtraction } from "../schemas/extraction.js";
 import type { SafetyAssessment } from "../schemas/safety.js";
 import { calculateCompletionScore } from "./completion.js";
-import { DETAIL_SCORABLE_SLOTS, isDetailScorableSlot } from "./detail-slots.js";
+import { DETAIL_SCORABLE_SLOTS } from "./detail-slots.js";
 import { detectForbiddenData } from "./forbidden.js";
 import { redactPII } from "./redaction.js";
 import { getNextSlot, getRemainingSlots, getSlotLabel } from "./slots.js";
@@ -85,6 +84,7 @@ export interface OrchestratorResult {
 	safetyAssessment: SafetyAssessment;
 	forbiddenCategories?: string[];
 	redactedMessage: string;
+	nextSlot: string | null;
 }
 
 export function createDefaultCaseData(): ExtractedCaseData {
@@ -279,7 +279,7 @@ function mergeExtraction(
 	};
 }
 
-function caseDataToSlots(data: ExtractedCaseData): CaseSlots {
+export function caseDataToSlots(data: ExtractedCaseData): CaseSlots {
 	return {
 		case_type: data.caseType,
 		first_touch_channel: data.entryPoint.first_touch_channel,
@@ -358,7 +358,6 @@ function detectEndIntent(message: string): boolean {
 		/ここまで/,
 		/終了/,
 		/おしまい/,
-		/大丈夫です(?!.*続)/,
 		/結構です/,
 		/もういい/,
 		/やめ/,
@@ -383,10 +382,9 @@ function isFilled(value: unknown): boolean {
 }
 
 /**
- * Identify detail-scorable slots that have values but haven't been scored yet
- * (or whose values have changed since last scoring).
+ * Identify detail-scorable slots that have values but haven't been scored yet.
  */
-function getSlotsNeedingScoring(
+export function getSlotsNeedingScoring(
 	slots: CaseSlots,
 	existingScores: Record<string, number>,
 ): Array<{ slotKey: string; extractedValue: unknown }> {
@@ -394,7 +392,6 @@ function getSlotsNeedingScoring(
 	for (const slotKey of DETAIL_SCORABLE_SLOTS) {
 		const value = slots[slotKey as keyof CaseSlots];
 		if (!isFilled(value)) continue;
-		// Score if not yet scored
 		if (existingScores[slotKey] === undefined) {
 			result.push({ slotKey, extractedValue: value });
 		}
@@ -402,31 +399,26 @@ function getSlotsNeedingScoring(
 	return result;
 }
 
-interface ActiveRubric {
-	slot_key: string;
-	version: number;
-	dimensions: {
-		name: string;
-		description: string;
-		weight: number;
-		levels: Record<string, string>;
-	}[];
-}
-
 export async function processTurn(
 	provider: AnthropicProvider,
 	userMessage: string,
 	conversationHistory: Array<{ role: "user" | "assistant"; content: string }>,
 	currentCaseData: ExtractedCaseData,
-	activeRubrics?: Map<string, ActiveRubric>,
 	detailThreshold?: number,
+	currentSlot?: string | null,
 ): Promise<OrchestratorResult> {
 	// 1. Redact PII from message
 	const redactedMessage = redactPII(userMessage);
 
 	// 2. Run extractor and safety classifier in parallel
 	const [extraction, safety] = await Promise.all([
-		extractFromMessage(provider, conversationHistory, userMessage),
+		extractFromMessage(
+			provider,
+			conversationHistory,
+			userMessage,
+			currentCaseData as unknown as Record<string, unknown>,
+			currentSlot,
+		),
 		classifySafety(provider, userMessage),
 	]);
 
@@ -439,21 +431,8 @@ export async function processTurn(
 	// 5. Check if should stop
 	const stopCheck = checkShouldStop(safety);
 
-	// 6. Detail scoring for filled detail-scorable slots
+	// 6. Calculate completion score (with existing detail scores — new scoring is deferred)
 	const slots = caseDataToSlots(mergedData);
-	const slotsToScore = getSlotsNeedingScoring(slots, mergedData.detailScores);
-	if (slotsToScore.length > 0) {
-		const newScores = await scoreDetailBatch(provider, slotsToScore, activeRubrics ?? new Map());
-		// Monotonic increase: keep the higher score
-		for (const [key, score] of Object.entries(newScores)) {
-			const existing = mergedData.detailScores[key];
-			if (existing === undefined || score > existing) {
-				mergedData.detailScores[key] = score;
-			}
-		}
-	}
-
-	// 7. Calculate completion score (with detail scores)
 	const completionScore = calculateCompletionScore(slots, mergedData.detailScores);
 
 	// 8. Determine stage
@@ -513,14 +492,21 @@ export async function processTurn(
 			mergedData.confirmationState = "done";
 			if (nextSlot) {
 				const context = buildContextSummary(mergedData);
-				question = await renderQuestion(provider, nextSlot, context, detailCtx);
+				question = await renderQuestion(
+					provider,
+					nextSlot,
+					context,
+					detailCtx,
+					mergedData.caseType,
+					conversationHistory,
+				);
 			} else {
 				question = WRAP_UP_MESSAGE;
 				stage = "wrap_up";
 				shouldEnd = true;
 			}
 		}
-	} else if (!nextSlot || stage === "wrap_up") {
+	} else if (!nextSlot) {
 		question = WRAP_UP_MESSAGE;
 		stage = "wrap_up";
 		shouldEnd = true;
@@ -532,7 +518,14 @@ export async function processTurn(
 	} else {
 		// Normal question flow
 		const context = buildContextSummary(mergedData);
-		question = await renderQuestion(provider, nextSlot, context, detailCtx);
+		question = await renderQuestion(
+			provider,
+			nextSlot,
+			context,
+			detailCtx,
+			mergedData.caseType,
+			conversationHistory,
+		);
 	}
 
 	return {
@@ -545,5 +538,6 @@ export async function processTurn(
 		safetyAssessment: safety,
 		forbiddenCategories: forbidden.hasViolation ? forbidden.categories : undefined,
 		redactedMessage,
+		nextSlot: shouldEnd ? null : nextSlot,
 	};
 }

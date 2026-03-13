@@ -6,7 +6,7 @@ import { useGetApiSessionsId } from "../../src/api/gen/aIInterviewAPI";
 export default function CompletePage() {
 	const { sessionId } = useParams();
 
-	useGetApiSessionsId(sessionId!, {
+	useGetApiSessionsId(sessionId ?? "", {
 		query: { enabled: !!sessionId },
 	});
 

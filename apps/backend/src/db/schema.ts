@@ -117,6 +117,7 @@ export const extractedCases = sqliteTable("extracted_cases", {
 		risk_level: string;
 	}>(),
 	skippedSlots: text("skipped_slots", { mode: "json" }).$type<string[]>(),
+	followedUpSlots: text("followed_up_slots", { mode: "json" }).$type<string[]>(),
 	confirmationState: text("confirmation_state").default("not_asked"),
 	qualityMeta: text("quality_meta", { mode: "json" }).$type<{
 		completion_score: number;
@@ -130,6 +131,7 @@ export const extractedCases = sqliteTable("extracted_cases", {
 	updatedAt: integer("updated_at", { mode: "timestamp" })
 		.$defaultFn(() => new Date())
 		.notNull(),
+	postValidatedAt: integer("post_validated_at", { mode: "timestamp" }),
 });
 
 // ピックアップされた良い回答
@@ -138,9 +140,7 @@ export const exemplarAnswers = sqliteTable("exemplar_answers", {
 	surveyId: text("survey_id")
 		.notNull()
 		.references(() => surveys.id),
-	sessionId: text("session_id")
-		.notNull()
-		.references(() => interviewSessions.id),
+	sessionId: text("session_id").references(() => interviewSessions.id),
 	slotKey: text("slot_key").notNull(),
 	rawText: text("raw_text").notNull(),
 	extractedValue: text("extracted_value", { mode: "json" }).$type<unknown>().notNull(),

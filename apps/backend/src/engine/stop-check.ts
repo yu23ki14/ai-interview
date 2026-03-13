@@ -20,9 +20,8 @@ export function checkShouldStop(safety: SafetyAssessment): StopCheckResult {
 		reasons.push("stop_intent_detected");
 	}
 
-	if (safety.secret_detected) {
-		reasons.push("secret_detected");
-	}
+	// secret_detected is recorded in safetyMeta but does not stop the session.
+	// Actual secrets are handled by PII redaction.
 
 	return {
 		shouldStop: reasons.length > 0,

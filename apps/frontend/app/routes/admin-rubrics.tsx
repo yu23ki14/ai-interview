@@ -4,12 +4,14 @@ import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import { Input } from "~/components/ui/input";
+import { Textarea } from "~/components/ui/textarea";
 import {
 	useDeleteApiAdminExemplarsId,
 	useGetApiAdminExemplars,
 	useGetApiAdminRubrics,
 	useGetApiSurveysId,
 	usePatchApiSurveysIdDetailThreshold,
+	usePostApiAdminExemplars,
 	usePostApiAdminRubricsGenerate,
 	usePostApiAdminRubricsIdActivate,
 } from "../../src/api/gen/aIInterviewAPI";
@@ -95,12 +97,14 @@ export default function AdminRubricsPage() {
 	const activateMutation = usePostApiAdminRubricsIdActivate();
 	const deleteExemplarMutation = useDeleteApiAdminExemplarsId();
 	const thresholdMutation = usePatchApiSurveysIdDetailThreshold();
+	const createExemplarMutation = usePostApiAdminExemplars();
 
 	const exemplars = exemplarsQuery.data?.status === 200 ? exemplarsQuery.data.data : [];
 	const rubrics = rubricsQuery.data?.status === 200 ? rubricsQuery.data.data : [];
 	const surveyData = surveyQuery.data?.status === 200 ? surveyQuery.data.data : null;
 
 	const [thresholdInput, setThresholdInput] = useState<string>("");
+	const [sampleText, setSampleText] = useState<string>("");
 	const currentThreshold = surveyData?.detailThreshold ?? 0.6;
 
 	const activeRubric = rubrics.find((r) => r.status === "active");
@@ -222,8 +226,8 @@ export default function AdminRubricsPage() {
 							<p className="text-sm text-muted-foreground">読み込み中...</p>
 						)}
 						{exemplars.length === 0 && !exemplarsQuery.isLoading && (
-							<p className="text-sm text-muted-foreground">
-								まだピックアップされた回答はありません。セッション詳細ページから良い回答をピックアップしてください。
+							<p className="mb-4 text-sm text-muted-foreground">
+								まだピックアップされた回答はありません。下のフォームから初期サンプルを登録するか、セッション詳細ページからピックアップしてください。
 							</p>
 						)}
 						{exemplars.length > 0 && (
@@ -232,8 +236,11 @@ export default function AdminRubricsPage() {
 									<div key={exemplar.id} className="rounded-lg border p-3">
 										<div className="mb-2 flex items-center justify-between text-xs text-muted-foreground">
 											<span>
-												{i + 1}. Session {exemplar.sessionId.slice(0, 8)}... （
-												{new Date(exemplar.createdAt).toLocaleDateString("ja-JP")}）
+												{i + 1}.{" "}
+												{exemplar.sessionId
+													? `Session ${exemplar.sessionId.slice(0, 8)}...`
+													: "初期サンプル"}
+												（{new Date(exemplar.createdAt).toLocaleDateString("ja-JP")}）
 											</span>
 											<Button
 												variant="ghost"
@@ -253,6 +260,43 @@ export default function AdminRubricsPage() {
 								))}
 							</div>
 						)}
+						{/* Initial sample registration */}
+						<div className="mt-4 rounded-lg border p-3">
+							<h4 className="mb-2 text-sm font-medium">初期サンプルを登録</h4>
+							<Textarea
+								value={sampleText}
+								onChange={(e) => setSampleText(e.target.value)}
+								placeholder="良い回答の例文を入力してください（例: 「LINEグループに有名な投資家の写真があって、他の人も毎日利益を報告していたので信頼してしまいました」）"
+								rows={3}
+							/>
+							<Button
+								variant="outline"
+								size="sm"
+								className="mt-2"
+								disabled={!sampleText.trim() || createExemplarMutation.isPending}
+								onClick={() => {
+									createExemplarMutation.mutate(
+										{
+											data: {
+												surveyId,
+												slotKey: selectedSlot,
+												rawText: sampleText.trim(),
+												extractedValue: [],
+												notes: "初期サンプル（リサーチャー登録）",
+											},
+										},
+										{
+											onSuccess: () => {
+												setSampleText("");
+												exemplarsQuery.refetch();
+											},
+										},
+									);
+								}}
+							>
+								{createExemplarMutation.isPending ? "登録中..." : "サンプルを登録"}
+							</Button>
+						</div>
 					</CardContent>
 				</Card>
 
