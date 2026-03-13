@@ -1,3 +1,4 @@
+import { isDetailScorableSlot } from "./detail-slots.js";
 import type { CaseSlots } from "./stage.js";
 
 interface WeightedField {
@@ -37,7 +38,15 @@ function isFilled(value: unknown): boolean {
 	return true;
 }
 
-export function calculateCompletionScore(slots: CaseSlots): number {
+/**
+ * Calculate completion score with optional detail scores.
+ * For detail-scorable slots: weight × detailScore (instead of binary weight).
+ * Falls back to binary (detailScore=1.0) when no detail score is available.
+ */
+export function calculateCompletionScore(
+	slots: CaseSlots,
+	detailScores?: Record<string, number>,
+): number {
 	let score = 0;
 	const allFields = [...REQUIRED_FIELDS, ...SEMI_REQUIRED_FIELDS, ...NICE_TO_HAVE_FIELDS];
 
@@ -50,7 +59,11 @@ export function calculateCompletionScore(slots: CaseSlots): number {
 			continue;
 		}
 		if (isFilled(slots[field.key])) {
-			score += field.weight;
+			if (isDetailScorableSlot(field.key) && detailScores?.[field.key] !== undefined) {
+				score += field.weight * detailScores[field.key];
+			} else {
+				score += field.weight;
+			}
 		}
 	}
 

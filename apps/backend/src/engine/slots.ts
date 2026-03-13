@@ -1,4 +1,8 @@
+import { isDetailScorableSlot } from "./detail-slots.js";
 import type { CaseSlots } from "./stage.js";
+
+/** Default threshold — slots with detail score below this get a follow-up */
+export const DEFAULT_DETAIL_THRESHOLD = 0.6;
 
 export const SLOT_PRIORITY: (keyof CaseSlots)[] = [
 	"first_touch_channel",
@@ -46,7 +50,23 @@ function isFilled(value: unknown): boolean {
 	return true;
 }
 
-export function getNextSlot(slots: CaseSlots, skippedSlots: string[] = []): string | null {
+/**
+ * Get the next slot to ask about.
+ * - Unfilled slots are returned first (normal flow).
+ * - Detail-scorable slots with score below threshold get a follow-up (max 1 extra turn per slot).
+ *
+ * @param detailScores Current detail scores per slot
+ * @param followedUpSlots Slots that have already received a follow-up question
+ * @param threshold Detail score threshold (default 0.6)
+ */
+export function getNextSlot(
+	slots: CaseSlots,
+	skippedSlots: string[] = [],
+	detailScores?: Record<string, number>,
+	followedUpSlots?: Set<string>,
+	threshold: number = DEFAULT_DETAIL_THRESHOLD,
+): string | null {
+	// First pass: find unfilled slots
 	for (const slot of SLOT_PRIORITY) {
 		if (skippedSlots.includes(slot)) continue;
 
@@ -60,6 +80,22 @@ export function getNextSlot(slots: CaseSlots, skippedSlots: string[] = []): stri
 			return slot;
 		}
 	}
+
+	// Second pass: find detail-scorable slots that need deeper answers
+	if (detailScores) {
+		for (const slot of SLOT_PRIORITY) {
+			if (skippedSlots.includes(slot)) continue;
+			if (!isFilled(slots[slot])) continue;
+			if (!isDetailScorableSlot(slot)) continue;
+			if (followedUpSlots?.has(slot)) continue;
+
+			const score = detailScores[slot];
+			if (score !== undefined && score < threshold) {
+				return slot;
+			}
+		}
+	}
+
 	return null;
 }
 

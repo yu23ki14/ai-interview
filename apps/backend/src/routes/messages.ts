@@ -2,7 +2,7 @@ import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { asc, eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { createAnthropicProvider } from "../ai/provider.js";
-import { extractedCases, interviewSessions, transcripts } from "../db/schema.js";
+import { detailRubrics, extractedCases, interviewSessions, transcripts } from "../db/schema.js";
 import { getMissingFields } from "../engine/completion.js";
 import {
 	createDefaultCaseData,
@@ -183,12 +183,42 @@ app.openapi(sendMessageRoute, async (c) => {
 				skippedSlots: caseRecord.skippedSlots ?? [],
 				confirmationState:
 					(caseRecord.confirmationState as "not_asked" | "pending" | "done") ?? "not_asked",
+				detailScores: (caseRecord.detailScoresData as Record<string, number>) ?? {},
+				followedUpSlots: [],
 			}
 		: createDefaultCaseData();
 
+	// Load active rubrics for detail scoring
+	const activeRubricRows = await db
+		.select()
+		.from(detailRubrics)
+		.where(eq(detailRubrics.status, "active"))
+		.all();
+	const activeRubricsMap = new Map(
+		activeRubricRows.map((r) => [
+			r.slotKey,
+			r.criteria as {
+				slot_key: string;
+				version: number;
+				dimensions: {
+					name: string;
+					description: string;
+					weight: number;
+					levels: Record<string, string>;
+				}[];
+			},
+		]),
+	);
+
 	// Process turn through orchestrator
 	const provider = createAnthropicProvider(c.env.ANTHROPIC_API_KEY);
-	const result = await processTurn(provider, content, conversationHistory, currentCaseData);
+	const result = await processTurn(
+		provider,
+		content,
+		conversationHistory,
+		currentCaseData,
+		activeRubricsMap,
+	);
 
 	// Calculate next turn index
 	const nextTurnIndex = existingTranscripts.length;
@@ -273,6 +303,7 @@ app.openapi(sendMessageRoute, async (c) => {
 				burden_level: result.safetyAssessment.burden_level,
 				risk_level: result.safetyAssessment.risk_level,
 			},
+			detailScoresData: result.extractedData.detailScores,
 			qualityMeta: {
 				completion_score: result.completionScore,
 				missing_fields: missingFields,

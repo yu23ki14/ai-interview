@@ -1,10 +1,15 @@
 import type { AnthropicProvider } from "@ai-sdk/anthropic";
+import { scoreDetailBatch } from "../ai/detail-scorer.js";
 import { extractFromMessage } from "../ai/extractor.js";
 import { renderQuestion } from "../ai/question-renderer.js";
 import { classifySafety } from "../ai/safety.js";
 import type { TurnExtraction } from "../schemas/extraction.js";
 import type { SafetyAssessment } from "../schemas/safety.js";
 import { calculateCompletionScore } from "./completion.js";
+import {
+	DETAIL_SCORABLE_SLOTS,
+	isDetailScorableSlot,
+} from "./detail-slots.js";
 import { detectForbiddenData } from "./forbidden.js";
 import { redactPII } from "./redaction.js";
 import { getNextSlot, getRemainingSlots, getSlotLabel } from "./slots.js";
@@ -69,6 +74,8 @@ export interface ExtractedCaseData {
 	};
 	skippedSlots: string[];
 	confirmationState: "not_asked" | "pending" | "done";
+	detailScores: Record<string, number>;
+	followedUpSlots: string[];
 }
 
 export interface OrchestratorResult {
@@ -142,6 +149,8 @@ export function createDefaultCaseData(): ExtractedCaseData {
 		},
 		skippedSlots: [],
 		confirmationState: "not_asked",
+		detailScores: {},
+		followedUpSlots: [],
 	};
 }
 
@@ -164,6 +173,8 @@ function mergeExtraction(
 			...existing,
 			skippedSlots: mergedSkipped,
 			confirmationState: existing.confirmationState,
+			detailScores: existing.detailScores,
+			followedUpSlots: existing.followedUpSlots,
 		};
 
 	return {
@@ -266,6 +277,8 @@ function mergeExtraction(
 		},
 		skippedSlots: mergedSkipped,
 		confirmationState: existing.confirmationState,
+		detailScores: existing.detailScores,
+		followedUpSlots: existing.followedUpSlots,
 	};
 }
 
@@ -366,11 +379,49 @@ const STOP_MESSAGE =
 	"ここで一度お休みにしましょう。" +
 	"\n\nもし何かお困りのことがあれば、消費者ホットライン（188）にご相談ください。";
 
+function isFilled(value: unknown): boolean {
+	if (value === null || value === undefined) return false;
+	if (Array.isArray(value)) return value.length > 0;
+	return true;
+}
+
+/**
+ * Identify detail-scorable slots that have values but haven't been scored yet
+ * (or whose values have changed since last scoring).
+ */
+function getSlotsNeedingScoring(
+	slots: CaseSlots,
+	existingScores: Record<string, number>,
+): Array<{ slotKey: string; extractedValue: unknown }> {
+	const result: Array<{ slotKey: string; extractedValue: unknown }> = [];
+	for (const slotKey of DETAIL_SCORABLE_SLOTS) {
+		const value = slots[slotKey as keyof CaseSlots];
+		if (!isFilled(value)) continue;
+		// Score if not yet scored
+		if (existingScores[slotKey] === undefined) {
+			result.push({ slotKey, extractedValue: value });
+		}
+	}
+	return result;
+}
+
+interface ActiveRubric {
+	slot_key: string;
+	version: number;
+	dimensions: {
+		name: string;
+		description: string;
+		weight: number;
+		levels: Record<string, string>;
+	}[];
+}
+
 export async function processTurn(
 	provider: AnthropicProvider,
 	userMessage: string,
 	conversationHistory: Array<{ role: "user" | "assistant"; content: string }>,
 	currentCaseData: ExtractedCaseData,
+	activeRubrics?: Map<string, ActiveRubric>,
 ): Promise<OrchestratorResult> {
 	// 1. Redact PII from message
 	const redactedMessage = redactPII(userMessage);
@@ -390,15 +441,41 @@ export async function processTurn(
 	// 5. Check if should stop
 	const stopCheck = checkShouldStop(safety);
 
-	// 6. Calculate completion score
+	// 6. Detail scoring for filled detail-scorable slots
 	const slots = caseDataToSlots(mergedData);
-	const completionScore = calculateCompletionScore(slots);
+	const slotsToScore = getSlotsNeedingScoring(slots, mergedData.detailScores);
+	if (slotsToScore.length > 0) {
+		const newScores = await scoreDetailBatch(provider, slotsToScore, activeRubrics ?? new Map());
+		// Monotonic increase: keep the higher score
+		for (const [key, score] of Object.entries(newScores)) {
+			const existing = mergedData.detailScores[key];
+			if (existing === undefined || score > existing) {
+				mergedData.detailScores[key] = score;
+			}
+		}
+	}
 
-	// 7. Determine stage
+	// 7. Calculate completion score (with detail scores)
+	const completionScore = calculateCompletionScore(slots, mergedData.detailScores);
+
+	// 8. Determine stage
 	let stage = determineStage(slots, mergedData.skippedSlots);
 
-	// 8. Find next slot (skip slots the participant said they cannot answer)
-	const nextSlot = getNextSlot(slots, mergedData.skippedSlots);
+	// 9. Find next slot (with detail-score-based follow-up)
+	const followedUpSet = new Set(mergedData.followedUpSlots);
+	const nextSlot = getNextSlot(
+		slots,
+		mergedData.skippedSlots,
+		mergedData.detailScores,
+		followedUpSet,
+	);
+
+	// Track follow-up: if nextSlot is already filled, it's a follow-up
+	if (nextSlot && isFilled(slots[nextSlot as keyof CaseSlots])) {
+		if (!followedUpSet.has(nextSlot)) {
+			mergedData.followedUpSlots = [...mergedData.followedUpSlots, nextSlot];
+		}
+	}
 
 	// Build safety warning if needed
 	let safetyWarning: string | undefined;
