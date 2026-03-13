@@ -2,11 +2,13 @@ import { swaggerUI } from "@hono/swagger-ui";
 import { OpenAPIHono } from "@hono/zod-openapi";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
-import surveyRoutes from "./routes/surveys.js";
-import sessionRoutes from "./routes/sessions.js";
-import messageRoutes from "./routes/messages.js";
-import summaryRoutes from "./routes/summary.js";
 import adminRoutes from "./routes/admin.js";
+import adminExemplarRoutes from "./routes/admin-exemplars.js";
+import adminRubricRoutes from "./routes/admin-rubrics.js";
+import messageRoutes from "./routes/messages.js";
+import sessionRoutes from "./routes/sessions.js";
+import summaryRoutes from "./routes/summary.js";
+import surveyRoutes from "./routes/surveys.js";
 
 type Bindings = {
 	DB: D1Database;
@@ -33,6 +35,8 @@ app.route("/", sessionRoutes);
 app.route("/", messageRoutes);
 app.route("/", summaryRoutes);
 app.route("/", adminRoutes);
+app.route("/", adminExemplarRoutes);
+app.route("/", adminRubricRoutes);
 
 // OpenAPI JSON エンドポイント
 app.doc("/api/openapi.json", {

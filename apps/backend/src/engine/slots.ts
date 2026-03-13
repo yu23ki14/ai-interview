@@ -1,6 +1,6 @@
 import type { CaseSlots } from "./stage.js";
 
-const SLOT_PRIORITY: (keyof CaseSlots)[] = [
+export const SLOT_PRIORITY: (keyof CaseSlots)[] = [
 	"first_touch_channel",
 	"case_type",
 	"was_ad",
@@ -20,7 +20,7 @@ const SLOT_PRIORITY: (keyof CaseSlots)[] = [
 	"what_should_be_improved_first",
 ];
 
-const SLOT_LABELS: Record<string, string> = {
+export const SLOT_LABELS: Record<string, string> = {
 	first_touch_channel: "最初の接点",
 	case_type: "ご本人の立場",
 	was_ad: "広告かどうか",
@@ -63,10 +63,7 @@ export function getNextSlot(slots: CaseSlots, skippedSlots: string[] = []): stri
 	return null;
 }
 
-export function getRemainingSlots(
-	slots: CaseSlots,
-	skippedSlots: string[] = [],
-): string[] {
+export function getRemainingSlots(slots: CaseSlots, skippedSlots: string[] = []): string[] {
 	const remaining: string[] = [];
 	for (const slot of SLOT_PRIORITY) {
 		if (skippedSlots.includes(slot)) continue;

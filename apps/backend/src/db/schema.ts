@@ -125,7 +125,68 @@ export const extractedCases = sqliteTable("extracted_cases", {
 	createdAt: integer("created_at", { mode: "timestamp" })
 		.$defaultFn(() => new Date())
 		.notNull(),
+	detailScoresData: text("detail_scores_data", { mode: "json" }).$type<Record<string, number>>(),
 	updatedAt: integer("updated_at", { mode: "timestamp" })
+		.$defaultFn(() => new Date())
+		.notNull(),
+});
+
+// ピックアップされた良い回答
+export const exemplarAnswers = sqliteTable("exemplar_answers", {
+	id: text("id").primaryKey(),
+	surveyId: text("survey_id")
+		.notNull()
+		.references(() => surveys.id),
+	sessionId: text("session_id")
+		.notNull()
+		.references(() => interviewSessions.id),
+	slotKey: text("slot_key").notNull(),
+	rawText: text("raw_text").notNull(),
+	extractedValue: text("extracted_value", { mode: "json" }).$type<unknown>().notNull(),
+	pickedBy: text("picked_by"),
+	notes: text("notes"),
+	createdAt: integer("created_at", { mode: "timestamp" })
+		.$defaultFn(() => new Date())
+		.notNull(),
+});
+
+// ルーブリック定義
+export const detailRubrics = sqliteTable("detail_rubrics", {
+	id: text("id").primaryKey(),
+	surveyId: text("survey_id")
+		.notNull()
+		.references(() => surveys.id),
+	slotKey: text("slot_key").notNull(),
+	status: text("status").notNull().default("draft"), // draft | active | archived
+	criteria: text("criteria", { mode: "json" })
+		.$type<{
+			slot_key: string;
+			version: number;
+			dimensions: {
+				name: string;
+				description: string;
+				weight: number;
+				levels: Record<string, string>;
+			}[];
+		}>()
+		.notNull(),
+	generatedFrom: text("generated_from", { mode: "json" }).$type<string[]>().notNull(),
+	createdAt: integer("created_at", { mode: "timestamp" })
+		.$defaultFn(() => new Date())
+		.notNull(),
+	activatedAt: integer("activated_at", { mode: "timestamp" }),
+});
+
+// 詳細度スコア履歴
+export const detailScores = sqliteTable("detail_scores", {
+	id: text("id").primaryKey(),
+	sessionId: text("session_id")
+		.notNull()
+		.references(() => interviewSessions.id),
+	slotKey: text("slot_key").notNull(),
+	score: real("score").notNull(),
+	rubricId: text("rubric_id").references(() => detailRubrics.id),
+	judgedAt: integer("judged_at", { mode: "timestamp" })
 		.$defaultFn(() => new Date())
 		.notNull(),
 });

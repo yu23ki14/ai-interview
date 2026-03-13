@@ -26,16 +26,20 @@ export default function AdminPage() {
 
 	const sessionsQuery = useGetApiAdminSessions();
 
-	const sessions =
-		sessionsQuery.data?.status === 200 ? sessionsQuery.data.data : [];
+	const sessions = sessionsQuery.data?.status === 200 ? sessionsQuery.data.data : [];
 
 	return (
 		<div className="mx-auto min-h-dvh max-w-4xl p-4">
 			<div className="mb-6 flex items-center justify-between">
 				<h1 className="text-2xl font-bold">管理画面</h1>
-				<Button asChild variant="outline" size="sm">
-					<Link to="/">トップへ</Link>
-				</Button>
+				<div className="flex gap-2">
+					<Button asChild variant="outline" size="sm">
+						<Link to="/admin/rubrics">ルーブリック管理</Link>
+					</Button>
+					<Button asChild variant="outline" size="sm">
+						<Link to="/">トップへ</Link>
+					</Button>
+				</div>
 			</div>
 
 			<Card>
@@ -47,14 +51,10 @@ export default function AdminPage() {
 						<p className="text-sm text-muted-foreground">読み込み中...</p>
 					)}
 					{sessionsQuery.isError && (
-						<p className="text-sm text-destructive">
-							セッション一覧の取得に失敗しました。
-						</p>
+						<p className="text-sm text-destructive">セッション一覧の取得に失敗しました。</p>
 					)}
 					{sessions.length === 0 && !sessionsQuery.isLoading && (
-						<p className="text-sm text-muted-foreground">
-							セッションはまだありません。
-						</p>
+						<p className="text-sm text-muted-foreground">セッションはまだありません。</p>
 					)}
 					{sessions.length > 0 && (
 						<div className="overflow-x-auto">
@@ -72,13 +72,9 @@ export default function AdminPage() {
 										<tr
 											key={session.id}
 											className="cursor-pointer border-b transition-colors last:border-b-0 hover:bg-muted/50"
-											onClick={() =>
-												navigate(`/admin/sessions/${session.id}`)
-											}
+											onClick={() => navigate(`/admin/sessions/${session.id}`)}
 										>
-											<td className="py-3 pr-4 font-mono text-xs">
-												{session.id.slice(0, 8)}...
-											</td>
+											<td className="py-3 pr-4 font-mono text-xs">{session.id.slice(0, 8)}...</td>
 											<td className="py-3 pr-4">
 												<Badge variant="secondary">{session.stage}</Badge>
 											</td>

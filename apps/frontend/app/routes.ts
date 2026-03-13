@@ -1,4 +1,4 @@
-import { type RouteConfig, index, route } from "@react-router/dev/routes";
+import { index, type RouteConfig, route } from "@react-router/dev/routes";
 
 export default [
 	index("routes/home.tsx"),
@@ -7,4 +7,5 @@ export default [
 	route("complete/:sessionId", "routes/complete.tsx"),
 	route("admin", "routes/admin.tsx"),
 	route("admin/sessions/:sessionId", "routes/admin-detail.tsx"),
+	route("admin/rubrics", "routes/admin-rubrics.tsx"),
 ] satisfies RouteConfig;

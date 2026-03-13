@@ -4,11 +4,13 @@
  * AI Interview API
  * OpenAPI spec version: 1.0.0
  */
-import type { AdminSessionDetailExtractedCase } from './adminSessionDetailExtractedCase';
-import type { Session } from './session';
+import type { AdminSessionDetailExtractedCase } from "./adminSessionDetailExtractedCase";
+import type { Session } from "./session";
+import type { SlotCard } from "./slotCard";
 
 export interface AdminSessionDetail {
-  session: Session;
-  /** @nullable */
-  extractedCase: AdminSessionDetailExtractedCase;
+	session: Session;
+	/** @nullable */
+	extractedCase: AdminSessionDetailExtractedCase;
+	slots: SlotCard[];
 }
