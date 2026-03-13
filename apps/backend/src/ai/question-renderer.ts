@@ -52,17 +52,37 @@ const SLOT_DESCRIPTIONS: Record<string, string> = {
 		"If they could change one thing to prevent others from having the same experience, what would it be. Keep it open and simple.",
 };
 
+export interface DetailContext {
+	isFollowUp: boolean;
+	currentScore?: number;
+	existingValue?: unknown;
+}
+
 export async function renderQuestion(
 	provider: AnthropicProvider,
 	nextSlot: string,
 	context: string,
+	detailContext?: DetailContext,
 ): Promise<string> {
 	const slotDescription = SLOT_DESCRIPTIONS[nextSlot] || nextSlot;
+
+	let prompt = `Context of what is known so far:\n${context}\n\nGenerate a question to ask about: ${slotDescription}\n\nSlot name: ${nextSlot}`;
+
+	if (detailContext?.isFollowUp) {
+		prompt +=
+			`\n\nIMPORTANT: The participant has already answered this topic.` +
+			` Their current answer is: ${JSON.stringify(detailContext.existingValue)}` +
+			` (detail score: ${Math.round((detailContext.currentScore ?? 0) * 100)}%).` +
+			` Ask a SHORT follow-up to draw out more specific details, concrete examples,` +
+			` or the thought process behind their answer.` +
+			` Do NOT repeat what they already said. Do NOT ask the same question again.` +
+			` Instead, gently probe deeper into one aspect they mentioned.`;
+	}
 
 	const { text } = await generateText({
 		model: provider("claude-sonnet-4-20250514"),
 		system: QUESTION_RENDERER_PROMPT,
-		prompt: `Context of what is known so far:\n${context}\n\nGenerate a question to ask about: ${slotDescription}\n\nSlot name: ${nextSlot}`,
+		prompt,
 	});
 
 	return text;

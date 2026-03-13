@@ -18,6 +18,7 @@ export * from "./exemplarAnswer";
 export * from "./generateRubricBody";
 export * from "./getApiAdminExemplarsParams";
 export * from "./getApiAdminRubricsParams";
+export * from "./patchApiSurveysIdDetailThresholdBody";
 export * from "./postApiSurveysBody";
 export * from "./rubricCriteria";
 export * from "./rubricDimension";

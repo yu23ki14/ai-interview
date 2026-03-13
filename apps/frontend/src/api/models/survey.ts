@@ -12,5 +12,6 @@ export interface Survey {
 	theme: string;
 	estimatedMinutes: number;
 	isActive: boolean;
+	detailThreshold: number;
 	createdAt: string;
 }

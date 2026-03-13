@@ -93,6 +93,7 @@ app.openapi(createSurveyRoute, async (c) => {
 			theme: body.theme,
 			estimatedMinutes: body.estimatedMinutes,
 			isActive: true,
+			detailThreshold: 0.6,
 			createdAt: now.toISOString(),
 		},
 		201,
@@ -117,6 +118,73 @@ app.openapi(getSurveyRoute, async (c) => {
 			theme: survey.theme,
 			estimatedMinutes: survey.estimatedMinutes,
 			isActive: survey.isActive,
+			detailThreshold: survey.detailThreshold,
+			createdAt: survey.createdAt.toISOString(),
+		},
+		200,
+	);
+});
+
+// PATCH /api/surveys/{id}/detail-threshold
+const updateDetailThresholdRoute = createRoute({
+	method: "patch",
+	path: "/api/surveys/{id}/detail-threshold",
+	request: {
+		params: z.object({
+			id: z.string(),
+		}),
+		body: {
+			content: {
+				"application/json": {
+					schema: z.object({
+						detailThreshold: z.number().min(0).max(1),
+					}),
+				},
+			},
+		},
+	},
+	responses: {
+		200: {
+			content: {
+				"application/json": {
+					schema: surveySchema,
+				},
+			},
+			description: "Threshold updated",
+		},
+		404: {
+			content: {
+				"application/json": {
+					schema: errorSchema,
+				},
+			},
+			description: "Survey not found",
+		},
+	},
+});
+
+app.openapi(updateDetailThresholdRoute, async (c) => {
+	const { id } = c.req.valid("param");
+	const { detailThreshold } = c.req.valid("json");
+	const db = drizzle(c.env.DB);
+
+	const survey = await db.select().from(surveys).where(eq(surveys.id, id)).get();
+
+	if (!survey) {
+		return c.json({ error: "Survey not found" }, 404);
+	}
+
+	await db.update(surveys).set({ detailThreshold }).where(eq(surveys.id, id));
+
+	return c.json(
+		{
+			id: survey.id,
+			title: survey.title,
+			description: survey.description,
+			theme: survey.theme,
+			estimatedMinutes: survey.estimatedMinutes,
+			isActive: survey.isActive,
+			detailThreshold,
 			createdAt: survey.createdAt.toISOString(),
 		},
 		200,

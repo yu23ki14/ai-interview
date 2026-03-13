@@ -2,7 +2,13 @@ import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { asc, eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { createAnthropicProvider } from "../ai/provider.js";
-import { detailRubrics, extractedCases, interviewSessions, transcripts } from "../db/schema.js";
+import {
+	detailRubrics,
+	extractedCases,
+	interviewSessions,
+	surveys,
+	transcripts,
+} from "../db/schema.js";
 import { getMissingFields } from "../engine/completion.js";
 import {
 	createDefaultCaseData,
@@ -188,12 +194,11 @@ app.openapi(sendMessageRoute, async (c) => {
 			}
 		: createDefaultCaseData();
 
-	// Load active rubrics for detail scoring
-	const activeRubricRows = await db
-		.select()
-		.from(detailRubrics)
-		.where(eq(detailRubrics.status, "active"))
-		.all();
+	// Load active rubrics and survey threshold in parallel
+	const [activeRubricRows, survey] = await Promise.all([
+		db.select().from(detailRubrics).where(eq(detailRubrics.status, "active")).all(),
+		db.select().from(surveys).where(eq(surveys.id, session.surveyId)).get(),
+	]);
 	const activeRubricsMap = new Map(
 		activeRubricRows.map((r) => [
 			r.slotKey,
@@ -209,6 +214,7 @@ app.openapi(sendMessageRoute, async (c) => {
 			},
 		]),
 	);
+	const detailThreshold = survey?.detailThreshold;
 
 	// Process turn through orchestrator
 	const provider = createAnthropicProvider(c.env.ANTHROPIC_API_KEY);
@@ -218,6 +224,7 @@ app.openapi(sendMessageRoute, async (c) => {
 		conversationHistory,
 		currentCaseData,
 		activeRubricsMap,
+		detailThreshold,
 	);
 
 	// Calculate next turn index

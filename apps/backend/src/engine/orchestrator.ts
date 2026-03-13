@@ -1,15 +1,12 @@
 import type { AnthropicProvider } from "@ai-sdk/anthropic";
 import { scoreDetailBatch } from "../ai/detail-scorer.js";
 import { extractFromMessage } from "../ai/extractor.js";
-import { renderQuestion } from "../ai/question-renderer.js";
+import { type DetailContext, renderQuestion } from "../ai/question-renderer.js";
 import { classifySafety } from "../ai/safety.js";
 import type { TurnExtraction } from "../schemas/extraction.js";
 import type { SafetyAssessment } from "../schemas/safety.js";
 import { calculateCompletionScore } from "./completion.js";
-import {
-	DETAIL_SCORABLE_SLOTS,
-	isDetailScorableSlot,
-} from "./detail-slots.js";
+import { DETAIL_SCORABLE_SLOTS, isDetailScorableSlot } from "./detail-slots.js";
 import { detectForbiddenData } from "./forbidden.js";
 import { redactPII } from "./redaction.js";
 import { getNextSlot, getRemainingSlots, getSlotLabel } from "./slots.js";
@@ -422,6 +419,7 @@ export async function processTurn(
 	conversationHistory: Array<{ role: "user" | "assistant"; content: string }>,
 	currentCaseData: ExtractedCaseData,
 	activeRubrics?: Map<string, ActiveRubric>,
+	detailThreshold?: number,
 ): Promise<OrchestratorResult> {
 	// 1. Redact PII from message
 	const redactedMessage = redactPII(userMessage);
@@ -468,14 +466,26 @@ export async function processTurn(
 		mergedData.skippedSlots,
 		mergedData.detailScores,
 		followedUpSet,
+		detailThreshold,
 	);
 
 	// Track follow-up: if nextSlot is already filled, it's a follow-up
-	if (nextSlot && isFilled(slots[nextSlot as keyof CaseSlots])) {
+	const isFollowUp = nextSlot != null && isFilled(slots[nextSlot as keyof CaseSlots]);
+	if (isFollowUp && nextSlot) {
 		if (!followedUpSet.has(nextSlot)) {
 			mergedData.followedUpSlots = [...mergedData.followedUpSlots, nextSlot];
 		}
 	}
+
+	// Build detail context for question rendering
+	const detailCtx: DetailContext | undefined =
+		isFollowUp && nextSlot
+			? {
+					isFollowUp: true,
+					currentScore: mergedData.detailScores[nextSlot],
+					existingValue: slots[nextSlot as keyof CaseSlots],
+				}
+			: undefined;
 
 	// Build safety warning if needed
 	let safetyWarning: string | undefined;
@@ -503,7 +513,7 @@ export async function processTurn(
 			mergedData.confirmationState = "done";
 			if (nextSlot) {
 				const context = buildContextSummary(mergedData);
-				question = await renderQuestion(provider, nextSlot, context);
+				question = await renderQuestion(provider, nextSlot, context, detailCtx);
 			} else {
 				question = WRAP_UP_MESSAGE;
 				stage = "wrap_up";
@@ -522,7 +532,7 @@ export async function processTurn(
 	} else {
 		// Normal question flow
 		const context = buildContextSummary(mergedData);
-		question = await renderQuestion(provider, nextSlot, context);
+		question = await renderQuestion(provider, nextSlot, context, detailCtx);
 	}
 
 	return {

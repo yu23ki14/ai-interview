@@ -9,6 +9,7 @@ export const surveySchema = z
 		theme: z.string(),
 		estimatedMinutes: z.number(),
 		isActive: z.boolean(),
+		detailThreshold: z.number(),
 		createdAt: z.string(),
 	})
 	.openapi("Survey");

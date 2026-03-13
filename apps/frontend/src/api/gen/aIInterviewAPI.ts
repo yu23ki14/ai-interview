@@ -36,6 +36,7 @@ import type {
 	GenerateRubricBody,
 	GetApiAdminExemplarsParams,
 	GetApiAdminRubricsParams,
+	PatchApiSurveysIdDetailThresholdBody,
 	PostApiSurveysBody,
 	SendMessageBody,
 	SendMessageResponse,
@@ -267,6 +268,112 @@ export function useGetApiSurveysId<
 
 	return { ...query, queryKey: queryOptions.queryKey };
 }
+
+export type patchApiSurveysIdDetailThresholdResponse200 = {
+	data: Survey;
+	status: 200;
+};
+
+export type patchApiSurveysIdDetailThresholdResponse404 = {
+	data: Error;
+	status: 404;
+};
+
+export type patchApiSurveysIdDetailThresholdResponseSuccess =
+	patchApiSurveysIdDetailThresholdResponse200 & {
+		headers: Headers;
+	};
+export type patchApiSurveysIdDetailThresholdResponseError =
+	patchApiSurveysIdDetailThresholdResponse404 & {
+		headers: Headers;
+	};
+
+export type patchApiSurveysIdDetailThresholdResponse =
+	| patchApiSurveysIdDetailThresholdResponseSuccess
+	| patchApiSurveysIdDetailThresholdResponseError;
+
+export const getPatchApiSurveysIdDetailThresholdUrl = (id: string) => {
+	return `/api/surveys/${id}/detail-threshold`;
+};
+
+export const patchApiSurveysIdDetailThreshold = async (
+	id: string,
+	patchApiSurveysIdDetailThresholdBody: PatchApiSurveysIdDetailThresholdBody,
+	options?: RequestInit,
+): Promise<patchApiSurveysIdDetailThresholdResponse> => {
+	return customFetch<patchApiSurveysIdDetailThresholdResponse>(
+		getPatchApiSurveysIdDetailThresholdUrl(id),
+		{
+			...options,
+			method: "PATCH",
+			headers: { "Content-Type": "application/json", ...options?.headers },
+			body: JSON.stringify(patchApiSurveysIdDetailThresholdBody),
+		},
+	);
+};
+
+export const getPatchApiSurveysIdDetailThresholdMutationOptions = <
+	TError = ErrorType<Error>,
+	TContext = unknown,
+>(options?: {
+	mutation?: UseMutationOptions<
+		Awaited<ReturnType<typeof patchApiSurveysIdDetailThreshold>>,
+		TError,
+		{ id: string; data: BodyType<PatchApiSurveysIdDetailThresholdBody> },
+		TContext
+	>;
+	request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+	Awaited<ReturnType<typeof patchApiSurveysIdDetailThreshold>>,
+	TError,
+	{ id: string; data: BodyType<PatchApiSurveysIdDetailThresholdBody> },
+	TContext
+> => {
+	const mutationKey = ["patchApiSurveysIdDetailThreshold"];
+	const { mutation: mutationOptions, request: requestOptions } = options
+		? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+			? options
+			: { ...options, mutation: { ...options.mutation, mutationKey } }
+		: { mutation: { mutationKey }, request: undefined };
+
+	const mutationFn: MutationFunction<
+		Awaited<ReturnType<typeof patchApiSurveysIdDetailThreshold>>,
+		{ id: string; data: BodyType<PatchApiSurveysIdDetailThresholdBody> }
+	> = (props) => {
+		const { id, data } = props ?? {};
+
+		return patchApiSurveysIdDetailThreshold(id, data, requestOptions);
+	};
+
+	return { mutationFn, ...mutationOptions };
+};
+
+export type PatchApiSurveysIdDetailThresholdMutationResult = NonNullable<
+	Awaited<ReturnType<typeof patchApiSurveysIdDetailThreshold>>
+>;
+export type PatchApiSurveysIdDetailThresholdMutationBody =
+	BodyType<PatchApiSurveysIdDetailThresholdBody>;
+export type PatchApiSurveysIdDetailThresholdMutationError = ErrorType<Error>;
+
+export const usePatchApiSurveysIdDetailThreshold = <TError = ErrorType<Error>, TContext = unknown>(
+	options?: {
+		mutation?: UseMutationOptions<
+			Awaited<ReturnType<typeof patchApiSurveysIdDetailThreshold>>,
+			TError,
+			{ id: string; data: BodyType<PatchApiSurveysIdDetailThresholdBody> },
+			TContext
+		>;
+		request?: SecondParameter<typeof customFetch>;
+	},
+	queryClient?: QueryClient,
+): UseMutationResult<
+	Awaited<ReturnType<typeof patchApiSurveysIdDetailThreshold>>,
+	TError,
+	{ id: string; data: BodyType<PatchApiSurveysIdDetailThresholdBody> },
+	TContext
+> => {
+	return useMutation(getPatchApiSurveysIdDetailThresholdMutationOptions(options), queryClient);
+};
 
 export type postApiSessionsResponse201 = {
 	data: CreateSessionResponse;

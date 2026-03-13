@@ -1,0 +1,1 @@
+ALTER TABLE `surveys` ADD `detail_threshold` real DEFAULT 0.6 NOT NULL;

@@ -3,10 +3,13 @@ import { Link } from "react-router";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
+import { Input } from "~/components/ui/input";
 import {
 	useDeleteApiAdminExemplarsId,
 	useGetApiAdminExemplars,
 	useGetApiAdminRubrics,
+	useGetApiSurveysId,
+	usePatchApiSurveysIdDetailThreshold,
 	usePostApiAdminRubricsGenerate,
 	usePostApiAdminRubricsIdActivate,
 } from "../../src/api/gen/aIInterviewAPI";
@@ -84,15 +87,38 @@ export default function AdminRubricsPage() {
 		{ query: { enabled: !!surveyId } },
 	);
 
+	const surveyQuery = useGetApiSurveysId(surveyId, {
+		query: { enabled: !!surveyId },
+	});
+
 	const generateMutation = usePostApiAdminRubricsGenerate();
 	const activateMutation = usePostApiAdminRubricsIdActivate();
 	const deleteExemplarMutation = useDeleteApiAdminExemplarsId();
+	const thresholdMutation = usePatchApiSurveysIdDetailThreshold();
 
 	const exemplars = exemplarsQuery.data?.status === 200 ? exemplarsQuery.data.data : [];
 	const rubrics = rubricsQuery.data?.status === 200 ? rubricsQuery.data.data : [];
+	const surveyData = surveyQuery.data?.status === 200 ? surveyQuery.data.data : null;
+
+	const [thresholdInput, setThresholdInput] = useState<string>("");
+	const currentThreshold = surveyData?.detailThreshold ?? 0.6;
 
 	const activeRubric = rubrics.find((r) => r.status === "active");
 	const draftRubric = rubrics.find((r) => r.status === "draft");
+
+	const handleThresholdSave = () => {
+		const value = Number.parseFloat(thresholdInput || String(currentThreshold));
+		if (Number.isNaN(value) || value < 0 || value > 1) return;
+		thresholdMutation.mutate(
+			{ id: surveyId, data: { detailThreshold: value } },
+			{
+				onSuccess: () => {
+					surveyQuery.refetch();
+					setThresholdInput("");
+				},
+			},
+		);
+	};
 
 	const handleGenerate = () => {
 		generateMutation.mutate(
@@ -148,6 +174,40 @@ export default function AdminRubricsPage() {
 					))}
 				</select>
 			</div>
+
+			{/* Threshold setting */}
+			<Card className="mb-6">
+				<CardHeader>
+					<CardTitle className="text-lg">詳細度閾値設定</CardTitle>
+				</CardHeader>
+				<CardContent>
+					<p className="mb-3 text-sm text-muted-foreground">
+						深掘りを行う詳細度スコアの閾値（0.0〜1.0）。この値を下回るスロットは深掘り対象になります。
+					</p>
+					<div className="flex items-center gap-3">
+						<span className="text-sm">
+							現在の閾値: <strong>{currentThreshold}</strong>
+						</span>
+						<Input
+							type="number"
+							min={0}
+							max={1}
+							step={0.05}
+							placeholder={String(currentThreshold)}
+							value={thresholdInput}
+							onChange={(e) => setThresholdInput(e.target.value)}
+							className="w-28"
+						/>
+						<Button
+							size="sm"
+							onClick={handleThresholdSave}
+							disabled={thresholdMutation.isPending || !thresholdInput}
+						>
+							{thresholdMutation.isPending ? "保存中..." : "保存"}
+						</Button>
+					</div>
+				</CardContent>
+			</Card>
 
 			<div className="flex flex-col gap-6">
 				{/* Exemplars section */}

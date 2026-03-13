@@ -8,6 +8,7 @@ export const surveys = sqliteTable("surveys", {
 	theme: text("theme").notNull(), // e.g. "online_ad_scam"
 	estimatedMinutes: integer("estimated_minutes").notNull().default(10),
 	isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
+	detailThreshold: real("detail_threshold").notNull().default(0.6),
 	createdAt: integer("created_at", { mode: "timestamp" })
 		.$defaultFn(() => new Date())
 		.notNull(),
