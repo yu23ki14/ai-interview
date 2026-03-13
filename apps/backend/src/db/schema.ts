@@ -115,6 +115,8 @@ export const extractedCases = sqliteTable("extracted_cases", {
 		burden_level: number;
 		risk_level: string;
 	}>(),
+	skippedSlots: text("skipped_slots", { mode: "json" }).$type<string[]>(),
+	confirmationState: text("confirmation_state").default("not_asked"),
 	qualityMeta: text("quality_meta", { mode: "json" }).$type<{
 		completion_score: number;
 		missing_fields: string[];

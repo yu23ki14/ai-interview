@@ -1,19 +1,14 @@
 import { Link, useParams } from "react-router";
 import { Button } from "~/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
-import { Progress } from "~/components/ui/progress";
 import { useGetApiSessionsId } from "../../src/api/gen/aIInterviewAPI";
 
 export default function CompletePage() {
 	const { sessionId } = useParams();
 
-	const sessionQuery = useGetApiSessionsId(sessionId!, {
+	useGetApiSessionsId(sessionId!, {
 		query: { enabled: !!sessionId },
 	});
-
-	const session = sessionQuery.data?.status === 200 ? sessionQuery.data.data : null;
-	const completionScore = session?.completionScore ?? 0;
-	const percentage = Math.round(completionScore * 100);
 
 	return (
 		<div className="flex min-h-dvh items-center justify-center bg-muted/30 p-4">
@@ -28,11 +23,9 @@ export default function CompletePage() {
 						大切に活用させていただきます。
 					</p>
 
-					<div className="rounded-lg bg-muted/50 p-4">
-						<p className="mb-2 text-sm font-medium">インタビュー完了度</p>
-						<Progress value={percentage} className="mb-1 h-2" />
-						<p className="text-sm text-muted-foreground">{percentage}%</p>
-					</div>
+					<p className="text-sm text-muted-foreground">
+						もし何かお困りのことがあれば、消費者ホットライン（188）にご相談ください。
+					</p>
 
 					<div className="flex flex-col gap-2">
 						<Button asChild variant="outline">

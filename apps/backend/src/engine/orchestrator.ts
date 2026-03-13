@@ -3,13 +3,13 @@ import { extractFromMessage } from "../ai/extractor.js";
 import { classifySafety } from "../ai/safety.js";
 import { renderQuestion } from "../ai/question-renderer.js";
 import type { TurnExtraction } from "../schemas/extraction.js";
-import type { SafetyAssessment } from "../schemas/safety.js";
+import { type SafetyAssessment } from "../schemas/safety.js";
 import { detectForbiddenData } from "./forbidden.js";
 import { redactPII } from "./redaction.js";
 import { checkShouldStop } from "./stop-check.js";
 import { calculateCompletionScore } from "./completion.js";
 import { determineStage, type CaseSlots, type Stage } from "./stage.js";
-import { getNextSlot } from "./slots.js";
+import { getNextSlot, getRemainingSlots, getSlotLabel } from "./slots.js";
 
 export interface ExtractedCaseData {
 	caseType?: string | null;
@@ -67,6 +67,8 @@ export interface ExtractedCaseData {
 		what_information_or_support_might_have_helped: string[];
 		what_should_be_improved_first: string[];
 	};
+	skippedSlots: string[];
+	confirmationState: "not_asked" | "pending" | "done";
 }
 
 export interface OrchestratorResult {
@@ -76,6 +78,7 @@ export interface OrchestratorResult {
 	shouldEnd: boolean;
 	extractedData: ExtractedCaseData;
 	safetyWarning?: string;
+	safetyAssessment: SafetyAssessment;
 	forbiddenCategories?: string[];
 	redactedMessage: string;
 }
@@ -137,6 +140,8 @@ export function createDefaultCaseData(): ExtractedCaseData {
 			what_information_or_support_might_have_helped: [],
 			what_should_be_improved_first: [],
 		},
+		skippedSlots: [],
+		confirmationState: "not_asked",
 	};
 }
 
@@ -151,7 +156,10 @@ function mergeExtraction(
 	extraction: TurnExtraction,
 ): ExtractedCaseData {
 	const facts = extraction.facts;
-	if (!facts) return existing;
+	const newSkipped = extraction.unanswerable_slots ?? [];
+	const mergedSkipped = Array.from(new Set([...existing.skippedSlots, ...newSkipped]));
+
+	if (!facts) return { ...existing, skippedSlots: mergedSkipped, confirmationState: existing.confirmationState };
 
 	return {
 		caseType: facts.case_type ?? existing.caseType,
@@ -275,6 +283,8 @@ function mergeExtraction(
 				facts.what_should_be_improved_first,
 			),
 		},
+		skippedSlots: mergedSkipped,
+		confirmationState: existing.confirmationState,
 	};
 }
 
@@ -291,8 +301,15 @@ function caseDataToSlots(data: ExtractedCaseData): CaseSlots {
 		estimated_amount_jpy: data.harmOutcome.estimated_amount_jpy,
 		why_it_felt_believable: data.psychology.why_it_felt_believable,
 		warning_signs_noticed: data.psychology.warning_signs_noticed,
+		emotions_during: data.psychology.emotions_during,
+		emotions_after: data.psychology.emotions_after,
+		non_monetary_harm: data.harmOutcome.non_monetary_harm,
 		what_platform_design_might_have_helped:
 			data.preventionSignal.what_platform_design_might_have_helped,
+		what_public_warning_might_have_helped:
+			data.preventionSignal.what_public_warning_might_have_helped,
+		what_information_or_support_might_have_helped:
+			data.preventionSignal.what_information_or_support_might_have_helped,
 		what_should_be_improved_first: data.preventionSignal.what_should_be_improved_first,
 	};
 }
@@ -321,6 +338,45 @@ function buildContextSummary(data: ExtractedCaseData): string {
 			`Warning signs: ${data.psychology.warning_signs_noticed.join(", ")}`,
 		);
 	return parts.length > 0 ? parts.join("\n") : "No information gathered yet.";
+}
+
+// Slots that belong to the "deepening" phase (emotions, prevention, etc.)
+const DEEPENING_SLOTS = new Set([
+	"emotions_during",
+	"emotions_after",
+	"non_monetary_harm",
+	"what_platform_design_might_have_helped",
+	"what_public_warning_might_have_helped",
+	"what_information_or_support_might_have_helped",
+	"what_should_be_improved_first",
+]);
+
+function buildConfirmationMessage(remainingSlots: string[]): string {
+	const topicLabels = remainingSlots
+		.slice(0, 4) // Show at most 4 topics to keep it short
+		.map((s) => getSlotLabel(s));
+	const topicList = topicLabels.join("、");
+	const moreNote = remainingSlots.length > 4 ? "など" : "";
+
+	return (
+		`ここまでお話しいただきありがとうございます。\n\n` +
+		`もしよろしければ、${topicList}${moreNote}についてもお聞きしたいのですが、続けても大丈夫ですか？\n\n` +
+		`ここで終わりにしていただいても全く問題ありません。「終わる」とお伝えいただければ終了します。`
+	);
+}
+
+function detectEndIntent(message: string): boolean {
+	const endPatterns = [
+		/終わ[るり]/,
+		/ここまで/,
+		/終了/,
+		/おしまい/,
+		/大丈夫です(?!.*続)/,
+		/結構です/,
+		/もういい/,
+		/やめ/,
+	];
+	return endPatterns.some((p) => p.test(message));
 }
 
 const WRAP_UP_MESSAGE =
@@ -362,10 +418,10 @@ export async function processTurn(
 	const completionScore = calculateCompletionScore(slots);
 
 	// 7. Determine stage
-	let stage = determineStage(slots);
+	let stage = determineStage(slots, mergedData.skippedSlots);
 
-	// 8. Find next slot
-	const nextSlot = getNextSlot(slots);
+	// 8. Find next slot (skip slots the participant said they cannot answer)
+	const nextSlot = getNextSlot(slots, mergedData.skippedSlots);
 
 	// Build safety warning if needed
 	let safetyWarning: string | undefined;
@@ -381,12 +437,39 @@ export async function processTurn(
 		question = STOP_MESSAGE;
 		stage = "stop";
 		shouldEnd = true;
-	} else if (!nextSlot || completionScore >= 0.85 || stage === "wrap_up") {
+	} else if (mergedData.confirmationState === "pending") {
+		// User is responding to the continuation confirmation
+		if (detectEndIntent(userMessage)) {
+			question = WRAP_UP_MESSAGE;
+			stage = "wrap_up";
+			shouldEnd = true;
+			mergedData.confirmationState = "done";
+		} else {
+			// User wants to continue
+			mergedData.confirmationState = "done";
+			if (nextSlot) {
+				const context = buildContextSummary(mergedData);
+				question = await renderQuestion(provider, nextSlot, context);
+			} else {
+				question = WRAP_UP_MESSAGE;
+				stage = "wrap_up";
+				shouldEnd = true;
+			}
+		}
+	} else if (!nextSlot || stage === "wrap_up") {
 		question = WRAP_UP_MESSAGE;
 		stage = "wrap_up";
 		shouldEnd = true;
+	} else if (
+		mergedData.confirmationState === "not_asked" &&
+		DEEPENING_SLOTS.has(nextSlot)
+	) {
+		// About to enter deepening phase — ask for confirmation first
+		const remaining = getRemainingSlots(slots, mergedData.skippedSlots);
+		question = buildConfirmationMessage(remaining);
+		mergedData.confirmationState = "pending";
 	} else {
-		// Generate question for next slot
+		// Normal question flow
 		const context = buildContextSummary(mergedData);
 		question = await renderQuestion(provider, nextSlot, context);
 	}
@@ -398,6 +481,7 @@ export async function processTurn(
 		shouldEnd,
 		extractedData: mergedData,
 		safetyWarning,
+		safetyAssessment: safety,
 		forbiddenCategories: forbidden.hasViolation ? forbidden.categories : undefined,
 		redactedMessage,
 	};

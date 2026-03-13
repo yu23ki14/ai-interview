@@ -1,0 +1,99 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="500" height="700" viewBox="0 0 500 700" fill="none">
+  <style>
+    .label { font-family: system-ui, -apple-system, sans-serif; font-size: 15px; fill: #1F2937; font-weight: 500; }
+    .note { font-family: system-ui, -apple-system, sans-serif; font-size: 11px; fill: #9CA3AF; font-style: italic; }
+    .num { font-family: system-ui, -apple-system, sans-serif; font-size: 12px; fill: #FFFFFF; font-weight: 700; text-anchor: middle; dominant-baseline: central; }
+    .connector { stroke: #D1D5DB; stroke-width: 2; }
+    .arrow { fill: #D1D5DB; }
+  </style>
+
+  <!-- Step 1: PIIリダクション -->
+  <line x1="100" y1="45" x2="100" y2="65" class="connector"/>
+  <circle cx="100" cy="33" r="14" fill="#6B7280"/>
+  <text x="100" y="33" class="num">1</text>
+  <text x="124" y="37" class="label">PIIリダクション</text>
+
+  <!-- Arrow 1→2 -->
+  <line x1="100" y1="47" x2="100" y2="85" class="connector"/>
+  <polygon points="94,80 106,80 100,88" class="arrow"/>
+
+  <!-- Step 2: 抽出 & 安全性分類 -->
+  <circle cx="100" cy="103" r="14" fill="#3B82F6"/>
+  <text x="100" y="103" class="num">2</text>
+  <text x="124" y="107" class="label">抽出 &amp; 安全性分類</text>
+  <text x="290" y="107" class="note">並列実行</text>
+
+  <!-- Arrow 2→3 -->
+  <line x1="100" y1="117" x2="100" y2="155" class="connector"/>
+  <polygon points="94,150 106,150 100,158" class="arrow"/>
+
+  <!-- Step 3: 禁止データチェック -->
+  <circle cx="100" cy="173" r="14" fill="#EF4444"/>
+  <text x="100" y="173" class="num">3</text>
+  <text x="124" y="177" class="label">禁止データチェック</text>
+  <text x="296" y="177" class="note">ルールベース</text>
+
+  <!-- Arrow 3→4 -->
+  <line x1="100" y1="187" x2="100" y2="225" class="connector"/>
+  <polygon points="94,220 106,220 100,228" class="arrow"/>
+
+  <!-- Step 4: ケースデータマージ -->
+  <circle cx="100" cy="243" r="14" fill="#10B981"/>
+  <text x="100" y="243" class="num">4</text>
+  <text x="124" y="247" class="label">ケースデータマージ</text>
+
+  <!-- Arrow 4→5 -->
+  <line x1="100" y1="257" x2="100" y2="295" class="connector"/>
+  <polygon points="94,290 106,290 100,298" class="arrow"/>
+
+  <!-- Step 5: 停止判定 -->
+  <circle cx="100" cy="313" r="14" fill="#EF4444"/>
+  <text x="100" y="313" class="num">5</text>
+  <text x="124" y="317" class="label">停止判定</text>
+  <text x="210" y="317" class="note">ルールベース</text>
+
+  <!-- Arrow 5→6 -->
+  <line x1="100" y1="327" x2="100" y2="365" class="connector"/>
+  <polygon points="94,360 106,360 100,368" class="arrow"/>
+
+  <!-- Step 6: 完了スコア計算 -->
+  <circle cx="100" cy="383" r="14" fill="#F59E0B"/>
+  <text x="100" y="383" class="num">6</text>
+  <text x="124" y="387" class="label">完了スコア計算</text>
+
+  <!-- Arrow 6→7 -->
+  <line x1="100" y1="397" x2="100" y2="435" class="connector"/>
+  <polygon points="94,430 106,430 100,438" class="arrow"/>
+
+  <!-- Step 7: ステージ決定 -->
+  <circle cx="100" cy="453" r="14" fill="#8B5CF6"/>
+  <text x="100" y="453" class="num">7</text>
+  <text x="124" y="457" class="label">ステージ決定</text>
+
+  <!-- Arrow 7→8 -->
+  <line x1="100" y1="467" x2="100" y2="505" class="connector"/>
+  <polygon points="94,500 106,500 100,508" class="arrow"/>
+
+  <!-- Step 8: 次スロット選定 -->
+  <circle cx="100" cy="523" r="14" fill="#8B5CF6"/>
+  <text x="100" y="523" class="num">8</text>
+  <text x="124" y="527" class="label">次スロット選定</text>
+
+  <!-- Arrow 8→9 -->
+  <line x1="100" y1="537" x2="100" y2="575" class="connector"/>
+  <polygon points="94,570 106,570 100,578" class="arrow"/>
+
+  <!-- Step 9: レスポンス生成 -->
+  <circle cx="100" cy="593" r="14" fill="#3B82F6"/>
+  <text x="100" y="593" class="num">9</text>
+  <text x="124" y="597" class="label">レスポンス生成</text>
+
+  <!-- Arrow 9→10 -->
+  <line x1="100" y1="607" x2="100" y2="645" class="connector"/>
+  <polygon points="94,640 106,640 100,648" class="arrow"/>
+
+  <!-- Step 10: DB保存 -->
+  <circle cx="100" cy="663" r="14" fill="#10B981"/>
+  <text x="100" y="663" class="num">10</text>
+  <text x="124" y="667" class="label">DB保存</text>
+</svg>

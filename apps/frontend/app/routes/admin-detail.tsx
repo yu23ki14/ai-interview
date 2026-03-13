@@ -2,7 +2,6 @@ import { Link, useParams } from "react-router";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
-import { ScrollArea } from "~/components/ui/scroll-area";
 import { useGetApiAdminSessionsId } from "../../src/api/gen/aIInterviewAPI";
 
 export default function AdminDetailPage() {
@@ -98,11 +97,9 @@ export default function AdminDetailPage() {
 							<CardTitle className="text-lg">抽出データ</CardTitle>
 						</CardHeader>
 						<CardContent>
-							<ScrollArea className="max-h-80">
-								<pre className="rounded-lg bg-muted/50 p-4 text-sm whitespace-pre-wrap">
-									{JSON.stringify(detail.extractedCase, null, 2)}
-								</pre>
-							</ScrollArea>
+							<pre className="rounded-lg bg-muted/50 p-4 text-sm whitespace-pre-wrap">
+								{JSON.stringify(detail.extractedCase, null, 2)}
+							</pre>
 						</CardContent>
 					</Card>
 				)}

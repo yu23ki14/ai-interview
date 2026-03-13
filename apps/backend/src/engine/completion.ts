@@ -6,11 +6,11 @@ interface WeightedField {
 }
 
 const REQUIRED_FIELDS: WeightedField[] = [
-	{ key: "case_type", weight: 0.15 },
-	{ key: "first_touch_channel", weight: 0.15 },
-	{ key: "was_ad", weight: 0.15 },
-	{ key: "money_sent", weight: 0.15 },
-	{ key: "why_it_felt_believable", weight: 0.15 },
+	{ key: "case_type", weight: 0.1 },
+	{ key: "first_touch_channel", weight: 0.1 },
+	{ key: "was_ad", weight: 0.1 },
+	{ key: "money_sent", weight: 0.1 },
+	{ key: "why_it_felt_believable", weight: 0.1 },
 ];
 
 const SEMI_REQUIRED_FIELDS: WeightedField[] = [
@@ -18,11 +18,16 @@ const SEMI_REQUIRED_FIELDS: WeightedField[] = [
 	{ key: "claimed_role", weight: 0.05 },
 	{ key: "moved_to_external_channel", weight: 0.05 },
 	{ key: "warning_signs_noticed", weight: 0.05 },
+	{ key: "emotions_during", weight: 0.05 },
+	{ key: "emotions_after", weight: 0.05 },
 ];
 
 const NICE_TO_HAVE_FIELDS: WeightedField[] = [
 	{ key: "estimated_amount_jpy", weight: 0.025 },
+	{ key: "non_monetary_harm", weight: 0.025 },
 	{ key: "what_platform_design_might_have_helped", weight: 0.025 },
+	{ key: "what_public_warning_might_have_helped", weight: 0.025 },
+	{ key: "what_information_or_support_might_have_helped", weight: 0.025 },
 	{ key: "what_should_be_improved_first", weight: 0.025 },
 ];
 

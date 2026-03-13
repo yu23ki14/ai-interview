@@ -1,0 +1,126 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="500" viewBox="0 0 900 500" fill="none">
+  <style>
+    text { font-family: system-ui, -apple-system, sans-serif; }
+    .title-en { font-weight: 700; font-size: 13px; fill: #1E293B; }
+    .title-ja { font-size: 11px; fill: #64748B; }
+    .subtitle { font-size: 9.5px; fill: #94A3B8; }
+    .center-title { font-weight: 700; font-size: 20px; fill: #FFFFFF; }
+    .connector { stroke: #CBD5E1; stroke-width: 1.5; }
+  </style>
+
+  <!-- Connectors from center to each box -->
+  <!-- Center point: 450, 250 -->
+  <!-- Top row: y=60, cx at 150, 450, 750 -->
+  <!-- Middle row: y=210, cx at 100, 800 -->
+  <!-- Bottom row: y=370, cx at 150, 450, 750 -->
+
+  <!-- Top-left: entry_point -->
+  <line x1="370" y1="230" x2="250" y2="115" class="connector"/>
+  <!-- Top-center: actor_profile -->
+  <line x1="450" y1="210" x2="450" y2="115" class="connector"/>
+  <!-- Top-right: interaction_flow -->
+  <line x1="530" y1="230" x2="650" y2="115" class="connector"/>
+  <!-- Middle-left: harm_outcome -->
+  <line x1="370" y1="250" x2="200" y2="250" class="connector"/>
+  <!-- Middle-right: psychology -->
+  <line x1="530" y1="250" x2="700" y2="250" class="connector"/>
+  <!-- Bottom-left: evidence -->
+  <line x1="370" y1="270" x2="250" y2="390" class="connector"/>
+  <!-- Bottom-center: prevention_signal -->
+  <line x1="450" y1="290" x2="450" y2="390" class="connector"/>
+  <!-- Bottom-right: safety_meta -->
+  <line x1="530" y1="270" x2="650" y2="390" class="connector"/>
+  <!-- Far right middle: quality_meta (below psychology) -->
+  <line x1="500" y1="290" x2="580" y2="390" class="connector"/>
+
+  <!-- ===== CENTER BOX ===== -->
+  <rect x="370" y="210" width="160" height="80" rx="12" fill="#1E293B"/>
+  <text x="450" y="255" text-anchor="middle" class="center-title">CaseRecord</text>
+
+  <!-- ===== 1. entry_point (top-left) ===== -->
+  <g transform="translate(100, 30)">
+    <rect width="195" height="85" rx="8" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1"/>
+    <rect width="5" height="85" rx="2.5" fill="#3B82F6"/>
+    <text x="16" y="24" class="title-en" fill="#3B82F6">entry_point</text>
+    <text x="16" y="42" class="title-ja">接触経緯</text>
+    <text x="16" y="60" class="subtitle">チャネル, 広告有無,</text>
+    <text x="16" y="74" class="subtitle">プラットフォーム</text>
+  </g>
+
+  <!-- ===== 2. actor_profile (top-center) ===== -->
+  <g transform="translate(352, 10)">
+    <rect width="195" height="85" rx="8" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1"/>
+    <rect width="5" height="85" rx="2.5" fill="#3B82F6"/>
+    <text x="16" y="24" class="title-en" fill="#3B82F6">actor_profile</text>
+    <text x="16" y="42" class="title-ja">詐欺者像</text>
+    <text x="16" y="60" class="subtitle">役割, 信頼シグナル</text>
+  </g>
+
+  <!-- ===== 3. interaction_flow (top-right) ===== -->
+  <g transform="translate(605, 30)">
+    <rect width="195" height="85" rx="8" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1"/>
+    <rect width="5" height="85" rx="2.5" fill="#10B981"/>
+    <text x="16" y="24" class="title-en" fill="#10B981">interaction_flow</text>
+    <text x="16" y="42" class="title-ja">やりとり</text>
+    <text x="16" y="60" class="subtitle">外部誘導, 要求内容</text>
+  </g>
+
+  <!-- ===== 4. harm_outcome (middle-left) ===== -->
+  <g transform="translate(5, 207)">
+    <rect width="195" height="85" rx="8" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1"/>
+    <rect width="5" height="85" rx="2.5" fill="#EF4444"/>
+    <text x="16" y="24" class="title-en" fill="#EF4444">harm_outcome</text>
+    <text x="16" y="42" class="title-ja">被害</text>
+    <text x="16" y="60" class="subtitle">金銭被害, 非金銭被害</text>
+  </g>
+
+  <!-- ===== 5. psychology (middle-right) ===== -->
+  <g transform="translate(700, 195)">
+    <rect width="195" height="95" rx="8" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1"/>
+    <rect width="5" height="95" rx="2.5" fill="#F59E0B"/>
+    <text x="16" y="24" class="title-en" fill="#F59E0B">psychology</text>
+    <text x="16" y="42" class="title-ja">心理</text>
+    <text x="16" y="60" class="subtitle">信じた理由, 警告サイン,</text>
+    <text x="16" y="74" class="subtitle">感情</text>
+  </g>
+
+  <!-- ===== 6. evidence (bottom-left) ===== -->
+  <g transform="translate(55, 370)">
+    <rect width="195" height="85" rx="8" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1"/>
+    <rect width="5" height="85" rx="2.5" fill="#6B7280"/>
+    <text x="16" y="24" class="title-en" fill="#6B7280">evidence</text>
+    <text x="16" y="42" class="title-ja">証拠</text>
+    <text x="16" y="60" class="subtitle">スクショ, チャットログ</text>
+  </g>
+
+  <!-- ===== 7. prevention_signal (bottom-center) ===== -->
+  <g transform="translate(315, 390)">
+    <rect width="205" height="95" rx="8" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1"/>
+    <rect width="5" height="95" rx="2.5" fill="#8B5CF6"/>
+    <text x="16" y="24" class="title-en" fill="#8B5CF6">prevention_signal</text>
+    <text x="16" y="42" class="title-ja">予防</text>
+    <text x="16" y="60" class="subtitle">プラットフォーム改善,</text>
+    <text x="16" y="74" class="subtitle">警告, 支援</text>
+  </g>
+
+  <!-- ===== 8. safety_meta (bottom-right near) ===== -->
+  <g transform="translate(570, 370)">
+    <rect width="195" height="85" rx="8" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1"/>
+    <rect width="5" height="85" rx="2.5" fill="#EF4444"/>
+    <text x="16" y="24" class="title-en" fill="#EF4444">safety_meta</text>
+    <text x="16" y="42" class="title-ja">安全性</text>
+    <text x="16" y="60" class="subtitle">PII検出, 負担レベル</text>
+  </g>
+
+  <!-- ===== 9. quality_meta (far bottom-right) ===== -->
+  <g transform="translate(700, 310)">
+    <rect width="195" height="85" rx="8" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1"/>
+    <rect width="5" height="85" rx="2.5" fill="#10B981"/>
+    <text x="16" y="24" class="title-en" fill="#10B981">quality_meta</text>
+    <text x="16" y="42" class="title-ja">品質</text>
+    <text x="16" y="60" class="subtitle">完了スコア, 欠落フィールド</text>
+  </g>
+
+  <!-- Extra connector for quality_meta -->
+  <line x1="530" y1="270" x2="700" y2="352" class="connector"/>
+</svg>

@@ -1,0 +1,1 @@
+ALTER TABLE `extracted_cases` ADD `skipped_slots` text;

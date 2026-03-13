@@ -1,0 +1,1 @@
+ALTER TABLE `extracted_cases` ADD `confirmation_state` text DEFAULT 'not_asked';

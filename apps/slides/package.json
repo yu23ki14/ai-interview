@@ -1,0 +1,16 @@
+{
+	"name": "slides",
+	"private": true,
+	"scripts": {
+		"dev": "slidev",
+		"build": "slidev build",
+		"export": "slidev export"
+	},
+	"dependencies": {
+		"@slidev/cli": "^51.0.0",
+		"@slidev/theme-default": "latest"
+	},
+	"devDependencies": {
+		"@oxc-parser/binding-linux-x64-gnu": "^0.118.0"
+	}
+}

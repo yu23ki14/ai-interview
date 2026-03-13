@@ -23,7 +23,12 @@ Important rules:
 - If something is ambiguous, leave it null or add it to uncertain_fields.
 - Do not classify anyone as definitively criminal unless explicitly stated by the participant.
 - Detect possible personal identifiers and secrets if present.
-- Detect possible distress or stop intent.`;
+- Detect possible distress or stop intent.
+- If the participant indicates they cannot or do not want to answer a question, identify the relevant slot and add it to unanswerable_slots. This includes:
+  - Cannot remember: 覚えていません, わかりません, 思い出せません
+  - Does not want to answer: 答えたくない, 言いたくない, パスしたい, スキップ, 次の質問へ, 飛ばして
+  - General decline: いいです, 大丈夫です (when used as refusal)
+  Use the slot field names (e.g., "warning_signs_noticed", "estimated_amount_jpy").`;
 
 export async function extractFromMessage(
 	provider: AnthropicProvider,

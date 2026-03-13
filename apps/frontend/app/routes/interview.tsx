@@ -3,7 +3,6 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useParams, useNavigate } from "react-router";
 import { Button } from "~/components/ui/button";
 import { Textarea } from "~/components/ui/textarea";
-import { Progress } from "~/components/ui/progress";
 import { Badge } from "~/components/ui/badge";
 import {
 	Dialog,
@@ -179,6 +178,12 @@ export default function InterviewPage() {
 		sendMutation.mutate({ id: sessionId!, data: { content: trimmed } });
 	}, [input, sendMutation, sessionId]);
 
+	const handleSkip = useCallback(() => {
+		if (sendMutation.isPending) return;
+		setInput("");
+		sendMutation.mutate({ id: sessionId!, data: { content: "パス" } });
+	}, [sendMutation, sessionId]);
+
 	const handleKeyDown = useCallback(
 		(e: React.KeyboardEvent<HTMLTextAreaElement>) => {
 			if (e.key === "Enter" && !e.shiftKey) {
@@ -228,26 +233,11 @@ export default function InterviewPage() {
 			{/* Header */}
 			<div className="border-b bg-background px-4 py-3">
 				<div className="mx-auto max-w-2xl">
-					<div className="mb-2 flex items-center justify-between">
+					<div className="flex items-center justify-between">
 						<h1 className="text-sm font-medium text-muted-foreground">
 							AIインタビュー
 						</h1>
 						<Badge variant="secondary">{stageInfo.label}</Badge>
-					</div>
-					<Progress value={completionScore * 100} className="h-1.5" />
-					<div className="mt-1 flex justify-between">
-						{STAGES.map((stage, i) => (
-							<span
-								key={stage.label}
-								className={`text-[10px] ${
-									i <= stageInfo.index
-										? "text-foreground"
-										: "text-muted-foreground/50"
-								}`}
-							>
-								{stage.label}
-							</span>
-						))}
 					</div>
 				</div>
 			</div>
@@ -288,13 +278,23 @@ export default function InterviewPage() {
 							className="min-h-10 max-h-32 resize-none"
 							rows={1}
 						/>
-						<Button
-							onClick={handleSend}
-							disabled={!input.trim() || sendMutation.isPending}
-							className="shrink-0 self-end"
-						>
-							送信
-						</Button>
+						<div className="flex shrink-0 flex-col gap-1 self-end">
+							<Button
+								onClick={handleSend}
+								disabled={!input.trim() || sendMutation.isPending}
+							>
+								送信
+							</Button>
+							<Button
+								variant="ghost"
+								size="sm"
+								onClick={handleSkip}
+								disabled={sendMutation.isPending}
+								className="text-xs text-muted-foreground"
+							>
+								スキップ
+							</Button>
+						</div>
 					</div>
 				</div>
 			</div>

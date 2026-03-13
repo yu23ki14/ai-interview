@@ -3,7 +3,7 @@ import { z } from "zod";
 export const turnExtractionSchema = z.object({
 	facts: z
 		.object({
-			case_type: z.enum(["victim", "near_miss", "unclear"]).nullable().optional(),
+			case_type: z.enum(["victim", "near_miss", "family", "unclear"]).nullable().optional(),
 			severity_level: z.string().nullable().optional(),
 			incident_summary: z.string().nullable().optional(),
 			first_touch_channel: z.string().nullable().optional(),
@@ -64,6 +64,12 @@ export const turnExtractionSchema = z.object({
 	pii_detected: z.boolean().optional(),
 	secret_detected: z.boolean().optional(),
 	uncertain_fields: z.array(z.string()).optional(),
+	unanswerable_slots: z
+		.array(z.string())
+		.optional()
+		.describe(
+			"Slot names the participant cannot or does not want to answer. Include when the participant: cannot remember (覚えていません, わかりません), does not want to answer (答えたくない, 言いたくない, パス), or otherwise declines (スキップ, 次の質問, 飛ばして).",
+		),
 });
 
 export type TurnExtraction = z.infer<typeof turnExtractionSchema>;

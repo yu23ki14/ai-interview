@@ -8,7 +8,7 @@ export interface StopCheckResult {
 export function checkShouldStop(safety: SafetyAssessment): StopCheckResult {
 	const reasons: string[] = [];
 
-	if (safety.burden_level >= 2) {
+	if (safety.burden_level >= 3) {
 		reasons.push("burden_level_high");
 	}
 

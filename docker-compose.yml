@@ -10,6 +10,8 @@ services:
     volumes:
       - ./apps/frontend/app:/app/apps/frontend/app:ro
       - ./apps/frontend/public:/app/apps/frontend/public:ro
+    env_file:
+      - .env
     environment:
       - NODE_ENV=development
       - VITE_API_URL=${VITE_API_URL:-http://localhost:8787}
@@ -29,6 +31,8 @@ services:
     volumes:
       - ./apps/backend/src:/app/apps/backend/src:ro
       - backend_wrangler:/app/apps/backend/.wrangler
+    env_file:
+      - .env
     environment:
       - ENVIRONMENT=${ENVIRONMENT:-development}
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}

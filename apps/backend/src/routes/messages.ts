@@ -184,6 +184,8 @@ app.openapi(sendMessageRoute, async (c) => {
 					what_information_or_support_might_have_helped: [],
 					what_should_be_improved_first: [],
 				},
+				skippedSlots: caseRecord.skippedSlots ?? [],
+				confirmationState: (caseRecord.confirmationState as "not_asked" | "pending" | "done") ?? "not_asked",
 			}
 		: createDefaultCaseData();
 
@@ -242,8 +244,15 @@ app.openapi(sendMessageRoute, async (c) => {
 		estimated_amount_jpy: data.harmOutcome.estimated_amount_jpy,
 		why_it_felt_believable: data.psychology.why_it_felt_believable,
 		warning_signs_noticed: data.psychology.warning_signs_noticed,
+		emotions_during: data.psychology.emotions_during,
+		emotions_after: data.psychology.emotions_after,
+		non_monetary_harm: data.harmOutcome.non_monetary_harm,
 		what_platform_design_might_have_helped:
 			data.preventionSignal.what_platform_design_might_have_helped,
+		what_public_warning_might_have_helped:
+			data.preventionSignal.what_public_warning_might_have_helped,
+		what_information_or_support_might_have_helped:
+			data.preventionSignal.what_information_or_support_might_have_helped,
 		what_should_be_improved_first: data.preventionSignal.what_should_be_improved_first,
 	});
 
@@ -260,13 +269,15 @@ app.openapi(sendMessageRoute, async (c) => {
 			psychology: data.psychology,
 			evidence: data.evidence,
 			preventionSignal: data.preventionSignal,
+			skippedSlots: data.skippedSlots,
+			confirmationState: data.confirmationState,
 			safetyMeta: {
-				pii_detected: result.forbiddenCategories
-					? result.forbiddenCategories.length > 0
-					: false,
-				secret_detected: !!result.safetyWarning?.includes("secret"),
-				burden_level: 0,
-				risk_level: result.safetyWarning ? "medium" : "none",
+				pii_detected:
+					result.safetyAssessment.pii_detected ||
+					(result.forbiddenCategories ? result.forbiddenCategories.length > 0 : false),
+				secret_detected: result.safetyAssessment.secret_detected,
+				burden_level: result.safetyAssessment.burden_level,
+				risk_level: result.safetyAssessment.risk_level,
 			},
 			qualityMeta: {
 				completion_score: result.completionScore,

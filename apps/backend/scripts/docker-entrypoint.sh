@@ -13,14 +13,8 @@ ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
 EOF
 
 echo "Running D1 migrations..."
-for f in ./migrations/*.sql; do
-  if [ -f "$f" ]; then
-    echo "  Running $f ..."
-    pnpm wrangler d1 execute my-database --local --file="$f" || true
-  fi
-done
-
+CI=true pnpm wrangler d1 migrations apply my-database --local
 echo "Migrations completed!"
-echo "Starting Wrangler dev server..."
 
+echo "Starting Wrangler dev server..."
 exec pnpm dev

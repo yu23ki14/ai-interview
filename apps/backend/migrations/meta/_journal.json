@@ -8,6 +8,20 @@
       "when": 1773367045204,
       "tag": "0000_red_sabretooth",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1773374663313,
+      "tag": "0001_neat_captain_marvel",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1773376780435,
+      "tag": "0002_solid_archangel",
+      "breakpoints": true
     }
   ]
 }
