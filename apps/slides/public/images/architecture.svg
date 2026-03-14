@@ -3,6 +3,9 @@
     <filter id="shadow" x="-4%" y="-4%" width="108%" height="112%">
       <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="#000" flood-opacity="0.15"/>
     </filter>
+    <marker id="arrowGray" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#6B7280"/>
+    </marker>
   </defs>
 
   <!-- Frontend Box -->
@@ -28,51 +31,57 @@
     <text x="450" y="230" text-anchor="middle" fill="rgba(255,255,255,0.9)" font-size="13">Drizzle ORM</text>
   </g>
 
-  <!-- AI (LLM) Box -->
+  <!-- AI (LLM) Box - Sonnet -->
   <g filter="url(#shadow)">
-    <rect x="650" y="60" width="220" height="160" rx="12" ry="12" fill="#8B5CF6"/>
-    <text x="760" y="95" text-anchor="middle" fill="#fff" font-size="18" font-weight="700">AI (LLM)</text>
-    <line x1="680" y1="108" x2="840" y2="108" stroke="rgba(255,255,255,0.3)" stroke-width="1"/>
-    <text x="760" y="133" text-anchor="middle" fill="rgba(255,255,255,0.9)" font-size="13">Claude Sonnet</text>
-    <text x="760" y="158" text-anchor="middle" fill="rgba(255,255,255,0.9)" font-size="12">抽出 / 質問生成</text>
-    <text x="760" y="180" text-anchor="middle" fill="rgba(255,255,255,0.9)" font-size="12">安全性評価 / 要約</text>
+    <rect x="650" y="60" width="220" height="120" rx="12" ry="12" fill="#8B5CF6"/>
+    <text x="760" y="88" text-anchor="middle" fill="#fff" font-size="16" font-weight="700">Claude Sonnet</text>
+    <line x1="680" y1="100" x2="840" y2="100" stroke="rgba(255,255,255,0.3)" stroke-width="1"/>
+    <text x="760" y="122" text-anchor="middle" fill="rgba(255,255,255,0.9)" font-size="12">抽出 / 要約</text>
+    <text x="760" y="142" text-anchor="middle" fill="rgba(255,255,255,0.9)" font-size="12">ルーブリック生成 / バリデーション</text>
+  </g>
+
+  <!-- AI (LLM) Box - Haiku -->
+  <g filter="url(#shadow)">
+    <rect x="650" y="195" width="220" height="100" rx="12" ry="12" fill="#A78BFA"/>
+    <text x="760" y="223" text-anchor="middle" fill="#fff" font-size="16" font-weight="700">Claude Haiku</text>
+    <line x1="680" y1="235" x2="840" y2="235" stroke="rgba(255,255,255,0.3)" stroke-width="1"/>
+    <text x="760" y="257" text-anchor="middle" fill="rgba(255,255,255,0.9)" font-size="12">安全性分類 / 質問生成</text>
+    <text x="760" y="277" text-anchor="middle" fill="rgba(255,255,255,0.9)" font-size="12">詳細度判定</text>
   </g>
 
   <!-- Database Box -->
   <g filter="url(#shadow)">
-    <rect x="650" y="260" width="220" height="80" rx="12" ry="12" fill="#F59E0B"/>
-    <text x="760" y="293" text-anchor="middle" fill="#fff" font-size="18" font-weight="700">Database</text>
-    <line x1="680" y1="305" x2="840" y2="305" stroke="rgba(255,255,255,0.3)" stroke-width="1"/>
-    <text x="760" y="327" text-anchor="middle" fill="rgba(255,255,255,0.9)" font-size="13">Cloudflare D1 (SQLite)</text>
+    <rect x="650" y="320" width="220" height="80" rx="12" ry="12" fill="#F59E0B"/>
+    <text x="760" y="353" text-anchor="middle" fill="#fff" font-size="18" font-weight="700">Database</text>
+    <line x1="680" y1="365" x2="840" y2="365" stroke="rgba(255,255,255,0.3)" stroke-width="1"/>
+    <text x="760" y="387" text-anchor="middle" fill="rgba(255,255,255,0.9)" font-size="13">Cloudflare D1 (SQLite)</text>
   </g>
 
   <!-- Arrow: Frontend -> Backend -->
-  <defs>
-    <marker id="arrowGray" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
-      <polygon points="0 0, 10 3.5, 0 7" fill="#6B7280"/>
-    </marker>
-  </defs>
   <line x1="250" y1="200" x2="335" y2="200" stroke="#6B7280" stroke-width="2" marker-end="url(#arrowGray)"/>
   <text x="292" y="190" text-anchor="middle" fill="#6B7280" font-size="10" font-weight="600">REST API /</text>
   <text x="292" y="203" text-anchor="middle" fill="#6B7280" font-size="10" font-weight="600">OpenAPI</text>
 
-  <!-- Arrow: Backend -> AI -->
-  <line x1="560" y1="140" x2="645" y2="140" stroke="#6B7280" stroke-width="2" marker-end="url(#arrowGray)"/>
-  <text x="602" y="132" text-anchor="middle" fill="#6B7280" font-size="10" font-weight="600">Anthropic</text>
-  <text x="602" y="145" text-anchor="middle" fill="#6B7280" font-size="10" font-weight="600">API</text>
+  <!-- Arrow: Backend -> AI Sonnet -->
+  <line x1="560" y1="120" x2="645" y2="120" stroke="#6B7280" stroke-width="2" marker-end="url(#arrowGray)"/>
+  <text x="602" y="112" text-anchor="middle" fill="#6B7280" font-size="10" font-weight="600">Anthropic</text>
+  <text x="602" y="125" text-anchor="middle" fill="#6B7280" font-size="10" font-weight="600">API</text>
+
+  <!-- Arrow: Backend -> AI Haiku -->
+  <line x1="560" y1="240" x2="645" y2="240" stroke="#6B7280" stroke-width="2" marker-end="url(#arrowGray)"/>
 
   <!-- Arrow: Backend -> Database -->
-  <line x1="560" y1="300" x2="645" y2="300" stroke="#6B7280" stroke-width="2" marker-end="url(#arrowGray)"/>
-  <text x="602" y="292" text-anchor="middle" fill="#6B7280" font-size="10" font-weight="600">Drizzle</text>
-  <text x="602" y="305" text-anchor="middle" fill="#6B7280" font-size="10" font-weight="600">ORM</text>
+  <line x1="560" y1="320" x2="645" y2="360" stroke="#6B7280" stroke-width="2" marker-end="url(#arrowGray)"/>
+  <text x="602" y="332" text-anchor="middle" fill="#6B7280" font-size="10" font-weight="600">Drizzle</text>
+  <text x="602" y="345" text-anchor="middle" fill="#6B7280" font-size="10" font-weight="600">ORM</text>
 
   <!-- Bottom Bar: Orval -->
   <g filter="url(#shadow)">
-    <rect x="30" y="410" width="530" height="50" rx="10" ry="10" fill="#6B7280"/>
-    <text x="295" y="441" text-anchor="middle" fill="#fff" font-size="14" font-weight="600">Orval 自動生成 API クライアント</text>
+    <rect x="30" y="420" width="530" height="50" rx="10" ry="10" fill="#6B7280"/>
+    <text x="295" y="451" text-anchor="middle" fill="#fff" font-size="14" font-weight="600">Orval 自動生成 API クライアント</text>
   </g>
 
   <!-- Dashed lines from bottom bar to Frontend and Backend -->
-  <line x1="140" y1="340" x2="140" y2="410" stroke="#6B7280" stroke-width="1.5" stroke-dasharray="5,4"/>
-  <line x1="450" y1="340" x2="450" y2="410" stroke="#6B7280" stroke-width="1.5" stroke-dasharray="5,4"/>
+  <line x1="140" y1="340" x2="140" y2="420" stroke="#6B7280" stroke-width="1.5" stroke-dasharray="5,4"/>
+  <line x1="450" y1="340" x2="450" y2="420" stroke="#6B7280" stroke-width="1.5" stroke-dasharray="5,4"/>
 </svg>

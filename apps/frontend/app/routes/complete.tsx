@@ -22,10 +22,6 @@ export default function CompletePage() {
 						いただいた情報は、社会課題の解決に向けた調査・研究に 大切に活用させていただきます。
 					</p>
 
-					<p className="text-sm text-muted-foreground">
-						もし何かお困りのことがあれば、消費者ホットライン（188）にご相談ください。
-					</p>
-
 					<div className="flex flex-col gap-2">
 						<Button asChild variant="outline">
 							<Link to="/">トップページへ戻る</Link>

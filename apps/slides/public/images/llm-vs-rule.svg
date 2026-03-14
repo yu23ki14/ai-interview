@@ -1,58 +1,71 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 400" width="900" height="400" font-family="system-ui, -apple-system, sans-serif">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 460" width="900" height="460" font-family="system-ui, -apple-system, sans-serif">
 
   <!-- Left side: LLM -->
   <!-- Header -->
   <rect x="40" y="20" width="380" height="52" rx="10" fill="#8B5CF6"/>
-  <text x="230" y="52" text-anchor="middle" fill="white" font-size="20" font-weight="bold">✦  LLM (Claude)</text>
+  <text x="230" y="52" text-anchor="middle" fill="white" font-size="20" font-weight="bold">LLM (Claude)</text>
 
   <!-- Subtitle -->
   <text x="230" y="90" text-anchor="middle" fill="#8B5CF6" font-size="14" font-weight="600">主観的判断</text>
 
   <!-- Item 1 -->
   <rect x="60" y="110" width="340" height="44" rx="8" fill="white" stroke="#8B5CF6" stroke-width="2"/>
-  <text x="230" y="137" text-anchor="middle" fill="#4C1D95" font-size="15" font-weight="500">情報抽出 (Extraction)</text>
+  <text x="200" y="137" text-anchor="middle" fill="#4C1D95" font-size="15" font-weight="500">情報抽出 (Extraction)</text>
+  <text x="370" y="137" text-anchor="end" fill="#A78BFA" font-size="11" font-weight="600">Sonnet</text>
 
   <!-- Item 2 -->
   <rect x="60" y="166" width="340" height="44" rx="8" fill="white" stroke="#8B5CF6" stroke-width="2"/>
-  <text x="230" y="193" text-anchor="middle" fill="#4C1D95" font-size="15" font-weight="500">質問生成 (Question Rendering)</text>
+  <text x="200" y="193" text-anchor="middle" fill="#4C1D95" font-size="15" font-weight="500">質問生成 (Question Rendering)</text>
+  <text x="370" y="193" text-anchor="end" fill="#A78BFA" font-size="11" font-weight="600">Haiku</text>
 
   <!-- Item 3 -->
   <rect x="60" y="222" width="340" height="44" rx="8" fill="white" stroke="#8B5CF6" stroke-width="2"/>
-  <text x="230" y="249" text-anchor="middle" fill="#4C1D95" font-size="15" font-weight="500">安全性評価 (Safety Classification)</text>
+  <text x="200" y="249" text-anchor="middle" fill="#4C1D95" font-size="15" font-weight="500">安全性分類 (Safety)</text>
+  <text x="370" y="249" text-anchor="end" fill="#A78BFA" font-size="11" font-weight="600">Haiku</text>
 
   <!-- Item 4 -->
   <rect x="60" y="278" width="340" height="44" rx="8" fill="white" stroke="#8B5CF6" stroke-width="2"/>
-  <text x="230" y="305" text-anchor="middle" fill="#4C1D95" font-size="15" font-weight="500">要約生成 (Summary)</text>
+  <text x="200" y="305" text-anchor="middle" fill="#4C1D95" font-size="15" font-weight="500">要約生成 (Summary)</text>
+  <text x="370" y="305" text-anchor="end" fill="#A78BFA" font-size="11" font-weight="600">Sonnet</text>
+
+  <!-- Item 5 -->
+  <rect x="60" y="334" width="340" height="44" rx="8" fill="white" stroke="#8B5CF6" stroke-width="2"/>
+  <text x="200" y="361" text-anchor="middle" fill="#4C1D95" font-size="15" font-weight="500">詳細度判定 (Detail Scoring)</text>
+  <text x="370" y="361" text-anchor="end" fill="#A78BFA" font-size="11" font-weight="600">Haiku</text>
 
   <!-- Center dashed divider -->
-  <line x1="450" y1="20" x2="450" y2="380" stroke="#CBD5E1" stroke-width="2" stroke-dasharray="8,6"/>
+  <line x1="450" y1="20" x2="450" y2="440" stroke="#CBD5E1" stroke-width="2" stroke-dasharray="8,6"/>
 
   <!-- Right side: Rule-based -->
   <!-- Header -->
   <rect x="480" y="20" width="380" height="52" rx="10" fill="#10B981"/>
-  <text x="670" y="52" text-anchor="middle" fill="white" font-size="20" font-weight="bold">⚙  ルールベース</text>
+  <text x="670" y="52" text-anchor="middle" fill="white" font-size="20" font-weight="bold">ルールベース</text>
 
   <!-- Subtitle -->
   <text x="670" y="90" text-anchor="middle" fill="#10B981" font-size="14" font-weight="600">説明可能性</text>
 
   <!-- Item 1 -->
   <rect x="500" y="110" width="340" height="44" rx="8" fill="white" stroke="#10B981" stroke-width="2"/>
-  <text x="670" y="137" text-anchor="middle" fill="#064E3B" font-size="15" font-weight="500">禁止データ検出</text>
+  <text x="670" y="137" text-anchor="middle" fill="#064E3B" font-size="15" font-weight="500">PIIリダクション</text>
 
   <!-- Item 2 -->
   <rect x="500" y="166" width="340" height="44" rx="8" fill="white" stroke="#10B981" stroke-width="2"/>
-  <text x="670" y="193" text-anchor="middle" fill="#064E3B" font-size="15" font-weight="500">次スロット選定</text>
+  <text x="670" y="193" text-anchor="middle" fill="#064E3B" font-size="15" font-weight="500">禁止データ検出</text>
 
   <!-- Item 3 -->
   <rect x="500" y="222" width="340" height="44" rx="8" fill="white" stroke="#10B981" stroke-width="2"/>
-  <text x="670" y="249" text-anchor="middle" fill="#064E3B" font-size="15" font-weight="500">完了スコア計算</text>
+  <text x="670" y="249" text-anchor="middle" fill="#064E3B" font-size="15" font-weight="500">次スロット選定</text>
 
   <!-- Item 4 -->
   <rect x="500" y="278" width="340" height="44" rx="8" fill="white" stroke="#10B981" stroke-width="2"/>
-  <text x="670" y="305" text-anchor="middle" fill="#064E3B" font-size="15" font-weight="500">ステージ遷移</text>
+  <text x="670" y="305" text-anchor="middle" fill="#064E3B" font-size="15" font-weight="500">完了スコア計算</text>
 
   <!-- Item 5 -->
   <rect x="500" y="334" width="340" height="44" rx="8" fill="white" stroke="#10B981" stroke-width="2"/>
-  <text x="670" y="361" text-anchor="middle" fill="#064E3B" font-size="15" font-weight="500">停止条件判定</text>
+  <text x="670" y="361" text-anchor="middle" fill="#064E3B" font-size="15" font-weight="500">ステージ遷移</text>
+
+  <!-- Item 6 -->
+  <rect x="500" y="390" width="340" height="44" rx="8" fill="white" stroke="#10B981" stroke-width="2"/>
+  <text x="670" y="417" text-anchor="middle" fill="#064E3B" font-size="15" font-weight="500">停止条件判定</text>
 
 </svg>

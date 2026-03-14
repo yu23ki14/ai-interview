@@ -135,7 +135,7 @@ layout: section
 | **3. 深掘り質問** | AIが未収集の情報を1つずつ質問（スキップ可） |
 | **4. 確認ゲート** | 心理面の質問前に「続けますか？」と確認 |
 | **5. 要約確認** | いつでも「要約を見る」で収集済み情報を確認可能 |
-| **6. 完了** | 感謝メッセージ + 相談窓口の案内（消費者ホットライン 188） |
+| **6. 完了** | 感謝メッセージ |
 
 </div>
 
@@ -206,21 +206,6 @@ layout: section
 </div>
 </div>
 
-<div class="mt-8">
-
-### 管理 API エンドポイント
-
-| エンドポイント | 用途 |
-|-------------|------|
-| `GET /api/admin/sessions` | セッション一覧取得 |
-| `GET /api/admin/sessions/{id}` | セッション詳細 + スロットカード |
-| `POST /api/admin/exemplars` | 良い回答をピックアップ |
-| `POST /api/admin/rubrics/generate` | ルーブリック生成 |
-| `POST /api/admin/rubrics/{id}/activate` | ルーブリック承認 |
-| `PATCH /api/surveys/{id}/detail-threshold` | 詳細度閾値変更 |
-
-</div>
-
 ---
 layout: section
 ---
@@ -244,7 +229,6 @@ layout: section
 | ステージ | 役割 | 収集する情報 |
 |---------|------|------------|
 | **intro** | 導入・同意取得 | 同意確認 |
-| **narrative** | 自由語り | 体験の概要（自由記述） |
 | **clarify_entry_point** | 接触経緯の深掘り | チャネル、広告有無、プラットフォーム |
 | **clarify_flow** | やりとりの深掘り | 外部誘導、要求内容（送金、個人情報等） |
 | **clarify_harm** | 被害状況の確認 | 金銭被害額、非金銭被害 |
@@ -265,7 +249,7 @@ layout: section
 ### 仕組み
 
 - 自由対話ではなく**未充填スロットの優先キュー**で次の質問を決定
-- 全18スロットに優先順位あり
+- 全17スロットに優先順位あり
 - 「覚えていない」「答えたくない」→ 自動スキップ
 - 深掘りフェーズ前に**確認ゲート**
 - **2パス方式**: 未充填スロット → 詳細度が閾値未満のスロットを深掘り
@@ -304,12 +288,12 @@ layout: section
 
 ### 確認メッセージ例
 
-> ここまでの情報をもとに、あと少しだけ詳しくお聞きしてもよろしいですか？
-> 残りの確認項目：
-> - そのとき感じた気持ち
-> - その後の気持ちの変化
-> - 被害を防ぐための提案
-> - 改善すべきこと
+<div class="text-sm">
+
+> ここまでお話しいただきありがとうございます。もしよろしければ、**体験中の気持ち、その後の気持ち、お金以外の影響**についてもお聞きしたいのですが、続けても大丈夫ですか？
+> ここで終わりにしても全く問題ありません。
+
+</div>
 
 </div>
 <div class="p-4 bg-gray-50 rounded-lg">
@@ -344,7 +328,7 @@ layout: section
 ## ターン処理パイプライン（processTurn）
 
 <div class="flex justify-center">
-<img src="/images/pipeline.svg" class="h-100" />
+<img src="/images/pipeline.svg" class="h-110" />
 </div>
 
 ---
@@ -365,7 +349,7 @@ layout: section
 
 ## 完了スコアの重み付け
 
-<div class="grid grid-cols-3 gap-6 mt-6">
+<div class="grid grid-cols-3 gap-6 mt-4">
 <div class="p-4 border-2 border-red-400 rounded-lg">
 
 ### 必須（50%）
@@ -393,8 +377,8 @@ layout: section
 </div>
 <div class="p-4 border-2 border-blue-400 rounded-lg">
 
-### あると良い（20%）
-各 ~2.5%
+### あると良い（15%）
+各 2.5%
 
 - `estimated_amount_jpy`
 - `non_monetary_harm` *
@@ -406,19 +390,19 @@ layout: section
 </div>
 </div>
 
-<div class="mt-4 p-3 bg-purple-50 rounded-lg text-sm">
+<div class="mt-3 p-2 bg-purple-50 rounded-lg text-xs">
 
-**\* 詳細度スコアリング対象**: バイナリ（有無）ではなく `weight × detail_score(0.0〜1.0)` で算出。例: weight=0.1, detail_score=0.4 → 0.04（従来は0.1）
+**\* 詳細度スコアリング対象**: バイナリではなく `weight × detail_score(0.0〜1.0)` で算出
 
 </div>
 
-<div class="mt-4">
+<div class="mt-2 text-sm">
 
 | スコア帯 | 判定 | 意味 |
 |---------|------|------|
-| 0.0 – 0.4 | 不十分 | 追加質問が必要 |
-| 0.4 – 0.7 | 追加質問要 | 基本情報はあるが深掘り不足 |
-| 0.7 – 0.85 | 分析可能 | 研究データとして利用可能 |
+| 0.0–0.4 | 不十分 | 追加質問が必要 |
+| 0.4–0.7 | 追加質問要 | 深掘り不足 |
+| 0.7–0.85 | 分析可能 | 研究データとして利用可 |
 | 0.85+ | 高品質 | 十分な情報が収集済み |
 
 </div>
@@ -427,7 +411,7 @@ layout: section
 
 ## 安全性システム
 
-<div class="grid grid-cols-2 gap-8 mt-6">
+<div class="grid grid-cols-2 gap-8 mt-4">
 <div>
 
 ### LLM安全性分類
@@ -444,13 +428,20 @@ shouldStop =
   burden_level >= 3
   || risk_level == "high"
   || stop_intent == true
-  || secret_detected == true
 ```
+
+<div class="text-xs opacity-70">
+
+※ `secret_detected` は停止トリガーではなくPIIリダクションで処理
+
+</div>
 
 </div>
 <div>
 
 ### 禁止データ検出（正規表現）
+
+<div class="text-sm">
 
 | カテゴリ | パターン |
 |---------|---------|
@@ -463,10 +454,11 @@ shouldStop =
 | 電話番号 | 0X-XXXX-XXXX形式 |
 | メール | email正規表現 |
 
+</div>
+
 ### PIIリダクション
 
-DB保存前に自動置換:
-`メール → [REDACTED:email]` 等
+DB保存前に自動置換: `メール → [REDACTED:email]` 等
 
 </div>
 </div>
@@ -643,22 +635,22 @@ detail_score <  threshold → 深掘り質問を追加
 <div class="grid grid-cols-2 gap-8 mt-8">
 <div class="p-4 bg-blue-50 rounded-lg">
 
-### Claude Sonnet — ルーブリック生成
+### Claude Sonnet — 高精度タスク
 
-- 非リアルタイム処理
-- ピックアップされた良い回答群の**共通点を分析**
-- 3〜5つの評価観点＋重み＋レベル定義を生成
-- リサーチャー承認後に運用開始
+- **抽出**: 発話からスキーマに沿った構造化データを抽出
+- **ルーブリック生成**: ピックアップされた良い回答群の共通点を分析
+- **要約**: 収集済み情報の中間要約を生成
+- **事後バリデーション**: 抽出結果の整合性検証
 
 </div>
 <div class="p-4 bg-green-50 rounded-lg">
 
-### Claude Haiku — リアルタイム詳細度判定
+### Claude Haiku — 低レイテンシタスク
 
-- インタビュー中の**各ターンで並列実行**
-- 低レイテンシ・コスト効率重視
-- ルーブリックの各観点に沿ってスコアリング
-- 値が変化したスロットのみ再判定
+- **安全性分類**: 心理的負担・停止意思をリアルタイム判定
+- **質問生成**: 次のスロットに応じた質問文を生成
+- **詳細度判定**: ルーブリックに沿ったスコアリング（バックグラウンド実行）
+- 低コスト・高速レスポンス重視
 
 </div>
 </div>
@@ -668,10 +660,12 @@ detail_score <  threshold → 深掘り質問を追加
 ### 改修後のパイプライン
 
 ```
-ユーザー発言 → 安全判定 → 抽出 → マージ
-  → 詳細度判定（Haiku, 並列） → 完了スコア算出（詳細度加味）
-  → ステージ判定 → スロット選択（2パス: 未充填 → 低スコア深掘り）
-  → 質問生成（深掘り時はDetailContext付与）
+ユーザー発言 → PIIリダクション → 抽出(Sonnet) + 安全判定(Haiku) [並列]
+  → 禁止データチェック → マージ → 停止判定
+  → 完了スコア算出（詳細度加味） → ステージ判定
+  → スロット選択（2パス: 未充填 → 低スコア深掘り）
+  → 確認ゲート判定 → 質問生成(Haiku)
+  → DB保存 → 詳細度判定(Haiku, バックグラウンド)
 ```
 
 </div>
@@ -694,19 +688,19 @@ layout: section
 
 ## 各セクションの詳細と設計意図
 
-<div class="mt-4">
+<div class="mt-2 text-sm">
 
 | セクション | 内容 | 設計意図 |
 |-----------|------|---------|
-| **entry_point** | チャネル、広告有無、プラットフォーム | **どこで** 接触したか — 広告規制の根拠データ |
-| **actor_profile** | 詐欺者の役割、信頼シグナル | **誰に** 騙されたか — 手口の類型化 |
-| **interaction_flow** | 外部誘導、要求内容（送金、ID提出等） | **何が起きたか** — プラットフォーム間の誘導パターン |
-| **harm_outcome** | 金銭被害額、非金銭的被害 | **被害の実態** — 被害規模の定量化 |
-| **psychology** | 信じた理由、警告サイン、感情 | **なぜ騙されたか** — 政策設計の核心データ |
-| **evidence** | スクショ、チャットログ等の保有状況 | 証拠保全状況の把握 |
-| **prevention_signal** | 改善提案、必要な警告・支援 | **何があれば防げたか** — 参加者自身の声 |
-| **safety_meta** | PII検出、負担レベル | データ品質管理・安全性フラグ |
-| **quality_meta** | 完了スコア、欠落フィールド | 分析時のフィルタリング基準 |
+| **entry_point** | チャネル、広告有無、PF | **どこで**接触 — 広告規制の根拠 |
+| **actor_profile** | 役割、信頼シグナル | **誰に**騙された — 手口の類型化 |
+| **interaction_flow** | 外部誘導、要求内容 | **何が起きた** — 誘導パターン |
+| **harm_outcome** | 金銭・非金銭被害 | **被害の実態** — 規模の定量化 |
+| **psychology** | 信じた理由、感情 | **なぜ騙された** — 政策設計の核心 |
+| **evidence** | スクショ、チャットログ等 | 証拠保全状況の把握 |
+| **prevention_signal** | 改善提案、必要な支援 | **何があれば防げた** — 市民の声 |
+| **safety_meta** | PII検出、負担レベル | 安全性フラグ |
+| **quality_meta** | 完了スコア、欠落フィールド | 分析時フィルタリング基準 |
 
 </div>
 
@@ -745,35 +739,35 @@ FUTURE → prevention_signal（何があれば防げた）
 
 ## 主な列挙値（Enum）
 
-<div class="grid grid-cols-2 gap-6 mt-4 text-sm">
+<div class="grid grid-cols-2 gap-6 mt-4 text-xs">
 <div>
 
 ### case_type
-`victim` | `near_miss` | `family` | `unclear`
+`victim` `near_miss` `family` `unclear`
 
 ### ad_claim_type
-`investment_return` | `celebrity_endorsement` | `romance` | `job_offer` | `side_income` | `authority_like` | `health_claim` | `other`
+`investment_return` `celebrity_endorsement` `romance` `job_offer` `side_income` `authority_like` `health_claim` `other`
 
 ### claimed_role
-`investor` | `financial_expert` | `celebrity` | `government_official` | `support_staff` | `romantic_interest` | `recruiter` | `friend_like_person` | `other`
+`investor` `financial_expert` `celebrity` `government_official` `support_staff` `romantic_interest` `recruiter` `friend_like_person` `other`
 
 ### trust_signal
-`famous_person_image` | `verified_like_appearance` | `professional_website` | `many_followers` | `success_story` | `urgent_language` | `social_proof` | `deepfake_like_media` | `other`
+`famous_person_image` `verified_like_appearance` `professional_website` `many_followers` `success_story` `friend_like_conversation` `urgent_language` `social_proof` `deepfake_like_media` `other`
 
 </div>
 <div>
 
 ### warning_signs_noticed
-`too_good_to_be_true` | `moved_off_platform` | `asked_for_money` | `asked_for_id` | `pressure_to_act_fast` | `unclear_company_identity` | `broken_japanese` | `other`
+`too_good_to_be_true` `moved_off_platform` `asked_for_money` `asked_for_id` `asked_for_app_install` `pressure_to_act_fast` `unclear_company_identity` `broken_japanese` `other`
 
 ### non_monetary_harm
-`fear` | `shame` | `time_loss` | `relationship_damage` | `identity_document_exposure` | `account_compromise` | `mental_distress` | `other`
+`fear` `shame` `time_loss` `relationship_damage` `identity_document_exposure` `account_compromise` `mental_distress` `other`
 
 ### emotions
-`hope` | `excitement` | `anxiety` | `confusion` | `regret` | `shame` | `anger` | `relief` | `fear` | `distrust`
+`hope` `excitement` `anxiety` `confusion` `regret` `shame` `anger` `relief` `fear` `distrust`
 
 ### prevention_signal
-`clearer_ad_warning` | `faster_suspicious_ad_removal` | `better_identity_verification` | `easier_scam_information_access` | `better_media_literacy_guidance` | `platform_design_change` | `other`
+`clearer_ad_warning` `faster_suspicious_ad_removal` `better_identity_verification` `easier_scam_information_access` `better_media_literacy_guidance` `platform_design_change` `other`
 
 </div>
 </div>
@@ -816,9 +810,10 @@ layout: section
 
 | パス | 内容 |
 |------|------|
+| `/survey/{surveyId}` | 調査説明・同意取得 |
 | `/interview/{id}` | インタビュー画面 |
 | `/complete/{id}` | 完了画面 |
-| `/admin/sessions` | 管理者：一覧 |
+| `/admin` | 管理者：セッション一覧 |
 | `/admin/sessions/{id}` | 管理者：詳細（スロットカード） |
 | `/admin/rubrics` | ルーブリック管理 |
 
@@ -855,15 +850,23 @@ pnpm generate:api # APIクライアント再生成
 
 ### APIエンドポイント
 
+<div class="text-xs">
+
 | メソッド | パス | 用途 |
 |---------|------|------|
 | POST | `/api/surveys` | アンケート作成 |
 | GET | `/api/surveys/{id}` | アンケート取得 |
 | PATCH | `/api/surveys/{id}/detail-threshold` | 閾値変更 |
 | POST | `/api/sessions` | セッション開始 |
+| GET | `/api/sessions/{id}` | セッション取得 |
 | POST | `/api/sessions/{id}/messages` | メッセージ送信 |
+| GET | `/api/sessions/{id}/messages` | 会話ログ |
+| GET | `/api/sessions/{id}/summary` | 要約取得 |
 | POST | `/api/admin/exemplars` | ピックアップ |
 | POST | `/api/admin/rubrics/generate` | ルーブリック生成 |
+| POST | `/api/admin/rubrics/{id}/activate` | 承認 |
+
+</div>
 
 </div>
 </div>
@@ -918,7 +921,7 @@ ai-interview/
 
 ## 開発コマンドまとめ
 
-<div class="mt-6">
+<div class="mt-4">
 
 | コマンド | 場所 | 内容 |
 |---------|------|------|

@@ -367,13 +367,11 @@ function detectEndIntent(message: string): boolean {
 
 const WRAP_UP_MESSAGE =
 	"ありがとうございます。貴重なお話を聞かせていただき、感謝いたします。" +
-	"お話しいただいた内容は、今後の被害防止の研究に役立てさせていただきます。" +
-	"\n\nもし何かお困りのことがあれば、消費者ホットライン（188）にご相談ください。";
+	"お話しいただいた内容は、今後の被害防止の研究に役立てさせていただきます。"
 
 const STOP_MESSAGE =
 	"お話しいただきありがとうございます。無理をなさらなくて大丈夫です。" +
-	"ここで一度お休みにしましょう。" +
-	"\n\nもし何かお困りのことがあれば、消費者ホットライン（188）にご相談ください。";
+	"ここで一度お休みにしましょう。"
 
 function isFilled(value: unknown): boolean {
 	if (value === null || value === undefined) return false;
